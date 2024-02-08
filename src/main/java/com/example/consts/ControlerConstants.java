@@ -8,9 +8,7 @@ import static com.example.consts.ModelConstants.*;
 
 @UtilityClass
 public class ControlerConstants {
-    public static final String INCORRECT_URL_PATH = "URL path not recognised: {}";
     public static final String NO_DATA_FOUND = "No data found for request";
-    public static final String INCORRECT_REQUEST = "Request not recognised: ";
     public static final String INCORRECT_REQUEST_ARGS = "Incorrect request args. No pass validation";
     public static final List<String> STUDENT_REQUEST_PARAMETERS = List.of(RQ_FIRST_NAME, RQ_MIDDLE_NAME, RQ_SURNAME, RQ_GROUP_ID, RQ_GROUP_NUMBER, RQ_PHONE_NUMBER, RQ_BIRTHDAY, RQ_ID);
     public static final List<String> TEACHER_REQUEST_PARAMETERS = List.of(RQ_FIRST_NAME, RQ_MIDDLE_NAME, RQ_SURNAME, RQ_PHONE_NUMBER, RQ_BIRTHDAY, RQ_EXPERIENCE, RQ_SUBJECT, RQ_ID);

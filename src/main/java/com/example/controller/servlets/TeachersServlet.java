@@ -1,5 +1,6 @@
 package com.example.controller.servlets;
 
+import com.example.consts.LoggerConstants;
 import com.example.exeptions.IncorrectRequestException;
 import com.example.exeptions.NoDataException;
 import com.example.mapper.TeacherMapper;
@@ -218,24 +219,29 @@ public class TeachersServlet extends HttpServlet {
     }
 
     private void doGetValidation(HttpServletRequest req) throws IncorrectRequestException {
+        logger.trace(START_VALIDATION);
         String path = req.getPathInfo();
         String query = req.getQueryString();
         if (path != null && query != null) throw new IncorrectRequestException(INCORRECT_REQUEST_ARGS);
         else if (path != null) pathValidation(req);
         else if (query != null) queryValidation(req);
+        logger.trace(END_VALIDATION_SUCCESSFUL);
     }
 
     private void pathValidation(HttpServletRequest req) throws IncorrectRequestException {
+        logger.trace(START_VALIDATION);
         try {
             String[] paths = req.getPathInfo().replaceFirst(PATH_SEPARATOR, EMPTY).split(PATH_SEPARATOR);
             for (String p : paths) Integer.parseInt(p);
+            logger.trace(END_VALIDATION_SUCCESSFUL);
         } catch (NumberFormatException e) {
-            logger.info(INCORRECT_URL_PATH, req.getRequestURI());
+            logger.trace(END_VALIDATION_UNSUCCESSFUL, e.getMessage());
             throw new IncorrectRequestException(INCORRECT_NUMBER_FORMAT);
         }
     }
 
     private void queryValidation(HttpServletRequest req) throws IncorrectRequestException {
+        logger.trace(START_VALIDATION);
         Map<String, String[]> mapQuery = req.getParameterMap();
         if (mapQuery == null) throw new IncorrectRequestException(INCORRECT_REQUEST_ARGS);
         for (String key : mapQuery.keySet()) {
@@ -244,5 +250,6 @@ public class TeachersServlet extends HttpServlet {
                 throw new IncorrectRequestException(INCORRECT_REQUEST_ARGS);
             if (!TEACHER_REQUEST_PARAMETERS.contains(key)) throw new IncorrectRequestException(INCORRECT_REQUEST_ARGS);
         }
+        logger.trace(END_VALIDATION_SUCCESSFUL);
     }
 }
