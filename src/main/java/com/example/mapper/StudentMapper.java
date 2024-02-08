@@ -10,6 +10,7 @@ import org.mapstruct.Mapping;
 public interface StudentMapper {
     @Mapping(target = "groupId", expression = "java(groupId)")
     StudentResponse mapToResponse(Student student, Integer groupId);
+
     @Mapping(target = "id", ignore = true)
     Student mapFromRequest(StudentRequest studentDto);
 }

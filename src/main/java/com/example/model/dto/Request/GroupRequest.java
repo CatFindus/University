@@ -1,11 +1,17 @@
 package com.example.model.dto.Request;
 
-import com.example.model.vo.Student;
+import com.example.consts.LoggerConstants;
 import lombok.Data;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import java.util.concurrent.CopyOnWriteArrayList;
 @Data
-public class GroupRequest implements DtoRequest{
+public class GroupRequest implements DtoRequest {
+    private final static Logger logger = LoggerFactory.getLogger(GroupRequest.class);
     private String number;
-    //private final CopyOnWriteArrayList<Student> students;
+
+    public GroupRequest(String number) {
+        this.number = number;
+        logger.debug(LoggerConstants.POJO_CREATED, this);
+    }
 }

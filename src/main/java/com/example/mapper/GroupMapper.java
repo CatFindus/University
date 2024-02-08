@@ -16,6 +16,7 @@ import java.util.Set;
 public interface GroupMapper {
     @Mapping(target = "students", expression = "java(students)")
     GroupResponse mapToResponse(Group group, List<DtoResponse> students);
+
     @Mapping(target = "id", ignore = true)
     Group mapFromRequest(GroupRequest groupRequest);
 }

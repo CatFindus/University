@@ -9,6 +9,7 @@ import com.example.mapper.viewmapper.JsonMapper;
 import com.example.mapper.viewmapper.ViewMapper;
 import com.example.model.dto.Request.StudentRequest;
 import com.example.model.dto.Response.DtoResponse;
+import com.example.model.dto.Response.ErrorResponse;
 import com.example.model.dto.Response.StudentResponse;
 import com.example.model.service.Service;
 import com.example.model.service.StudentService;
@@ -16,18 +17,24 @@ import com.example.model.vo.ModelUnit;
 import com.example.model.vo.Student;
 import com.example.view.JsonView;
 import com.example.view.View;
-import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import java.io.BufferedReader;
+
 import java.io.IOException;
+import java.time.LocalDate;
+import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+
+import static com.example.consts.ControlerConstants.INCORRECT_REQUEST_ARGS;
+import static com.example.consts.ControlerConstants.WARN_MSG;
+import static com.example.consts.LoggerConstants.*;
+import static com.example.consts.ModelConstants.*;
 
 @WebServlet(name = "StudentsServlet", urlPatterns = "/students/*")
 public class StudentsServlet extends HttpServlet {
@@ -43,120 +50,157 @@ public class StudentsServlet extends HttpServlet {
         service = new StudentService();
         mapper = new StudentMapperImpl();
     }
+
     @Override
-    protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+    protected void doGet(HttpServletRequest req, HttpServletResponse resp) {
+        logger.trace(DO_GET_BEGIN);
         initialization(resp);
-        if (isGetRequestCorrect(req)) {
-            try {
-                List<ModelUnit> students=null;
-                if (req.getPathInfo()!=null) students = service.getDataById(req.getPathInfo().replaceFirst("/",""));
-                else students = service.getDataByParameters(req.getParameterMap());
-                view.update(service.mappingVoToDto(students));
-            } catch (IncorrectRequestException e) {
-                logger.info(ControlerConstants.INCORRECT_REQUEST+req.getRequestURI());
-                resp.sendError(400, ControlerConstants.INCORRECT_REQUEST+req.getRequestURI());
-            }
+        try {
+            doGetValidation(req);
+            List<ModelUnit> students;
+            if (req.getPathInfo() != null)
+                students = service.getDataById(req.getPathInfo().replaceFirst(PATH_SEPARATOR, EMPTY));
+            else students = service.getDataByParameters(req.getParameterMap());
+            view.update(service.mappingVoToDto(students));
+            logger.trace(DO_GET_END);
+        } catch (IncorrectRequestException e) {
+            ErrorResponse response = new ErrorResponse(e.getMessage());
+            logger.warn(WARN_MSG, response.getErrorID(), e.getMessage());
+            view.update(List.of(response));
         }
     }
 
     @Override
-    protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+    protected void doPost(HttpServletRequest req, HttpServletResponse resp) {
+        logger.trace(DO_POST_BEGIN);
         initialization(resp);
-        CheckRequestForPost(req, resp);
-        try(BufferedReader reader = req.getReader()) {
-            StudentRequest studentRequest = null;
+        try {
+            doPostValidation(req);
+            StudentRequest studentRequest;
             try {
                 studentRequest = jsonMapper.getDtoFromRequest(StudentRequest.class, req.getReader());
             } catch (IOException e) {
-                throw new IncorrectRequestException();
+                throw new IncorrectRequestException(INCORRECT_BODY_OF_REQUEST);
             }
-            Student student =  mapper.mapFromRequest(studentRequest);
+            Student student = mapper.mapFromRequest(studentRequest);
             StudentResponse studentResponse = mapper.mapToResponse(student, null);
-            if(service.create(student)) {
+            if (service.create(student)) {
                 resp.setStatus(201);
                 view.update(List.of(studentResponse));
             }
+            logger.trace(DO_POST_END);
         } catch (IncorrectRequestException e) {
-                logger.info(ControlerConstants.NO_DATA_FOUND+req.getRequestURI());
-                resp.sendError(400, ControlerConstants.INCORRECT_REQUEST+req.getRequestURI());
+            ErrorResponse response = new ErrorResponse(e.getMessage());
+            logger.warn(WARN_MSG, response.getErrorID(), e.getMessage());
+            view.update(List.of(response));
         }
 
     }
+
     @Override
-    protected void doPut(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+    protected void doPut(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+        logger.trace(DO_PUT_BEGIN);
         initialization(resp);
-        CheckRequestForPutDelete(req, resp);
         try {
-            String studentId = req.getPathInfo().replaceFirst("/","");
+            doPutDeleteValidation(req);
+            String studentId = req.getPathInfo().replaceFirst(PATH_SEPARATOR, EMPTY);
             StudentRequest studentRequest = jsonMapper.getDtoFromRequest(StudentRequest.class, req.getReader());
             List<DtoResponse> response = service.update(studentId, studentRequest);
             view.update(response);
-        } catch (IncorrectRequestException e) {
-            logger.info(ControlerConstants.NO_DATA_FOUND+req.getRequestURI());
-            resp.sendError(400, ControlerConstants.INCORRECT_REQUEST+req.getRequestURI());
-        } catch (NoDataException e) {
-            logger.info(ControlerConstants.NO_DATA_FOUND+req.getRequestURI());
-            resp.sendError(404, ControlerConstants.INCORRECT_REQUEST+req.getRequestURI());
+            logger.trace(DO_PUT_END);
+        } catch (IncorrectRequestException | NoDataException e) {
+            ErrorResponse response = new ErrorResponse(e.getMessage());
+            logger.warn(WARN_MSG, response.getErrorID(), e.getMessage());
+            view.update(List.of(response));
         }
     }
 
     @Override
-    protected void doDelete(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+    protected void doDelete(HttpServletRequest req, HttpServletResponse resp) {
+        logger.trace(DO_DELETE_BEGIN);
         initialization(resp);
-        CheckRequestForPutDelete(req, resp);
         try {
-            String studentId = req.getPathInfo().replaceFirst("/","");
+
+            doPutDeleteValidation(req);
+            String studentId = req.getPathInfo().replaceFirst(PATH_SEPARATOR, EMPTY);
             service.delete(studentId);
             resp.setStatus(204);
             view.update(new ArrayList<>());
-        } catch (IncorrectRequestException e) {
-            logger.info(ControlerConstants.NO_DATA_FOUND+req.getRequestURI());
-            resp.sendError(400, ControlerConstants.INCORRECT_REQUEST+req.getRequestURI());
-        } catch (NoDataException e) {
-            logger.info(ControlerConstants.NO_DATA_FOUND+req.getRequestURI());
-            resp.sendError(404, ControlerConstants.INCORRECT_REQUEST+req.getRequestURI());
+            logger.trace(DO_DELETE_END);
+        } catch (IncorrectRequestException | NoDataException e) {
+            ErrorResponse response = new ErrorResponse(e.getMessage());
+            logger.warn(WARN_MSG, response.getErrorID(), e.getMessage());
+            view.update(List.of(response));
         }
     }
-    private boolean isGetRequestCorrect(HttpServletRequest req) {
+
+    private void doGetValidation(HttpServletRequest req) throws IncorrectRequestException {
+        logger.trace(START_VALIDATION);
         String path = req.getPathInfo();
         String query = req.getQueryString();
-        if(path!=null && query!=null) return false;
-        else if(path!=null) {
-            return isPathCorrect(req);
-        } else if (query!=null) {
-            return isQueryCorrect(req);
-        }
-        return true;
-    }
-    boolean isPathCorrect(HttpServletRequest req) {
         try {
-            Integer.parseInt(req.getPathInfo().replaceFirst("/", ""));
-            return true;
+            if (path != null && query != null) throw new IncorrectRequestException(INCORRECT_REQUEST_ARGS);
+            else if (path != null) Integer.parseInt(req.getPathInfo().replaceFirst(PATH_SEPARATOR, EMPTY));
+            else if (query != null) queryValidation(req);
+            else throw new IncorrectRequestException(INCORRECT_REQUEST_ARGS);
+            logger.trace(END_VALIDATION_SUCCESSFUL);
         } catch (NumberFormatException e) {
-            logger.info(ControlerConstants.INCORRECT_URL_PATH,req.getRequestURI());
-            return false;
+            logger.trace(END_VALIDATION_UNSUCCESSFUL,e.getMessage());
+            throw new IncorrectRequestException(INCORRECT_NUMBER_FORMAT);
+        } catch (DateTimeParseException e) {
+            logger.trace(END_VALIDATION_UNSUCCESSFUL,e.getMessage());
+            throw new IncorrectRequestException(INCORRECT_DATE_FORMAT);
         }
     }
-    boolean isQueryCorrect(HttpServletRequest req) {
-        Map<String,String[]> mapQuery = req.getParameterMap();
-        if (mapQuery==null) return false;
-        for(String key:mapQuery.keySet()) {
-            String[] queryValue = mapQuery.get(key);
-            if(queryValue == null || queryValue.length != 1) return false;
-            if(!ControlerConstants.STUDENT_REQUEST_PARAMETERS.contains(key)) return false;
+
+
+    private void queryValidation(HttpServletRequest req) throws IncorrectRequestException {
+        logger.trace(START_VALIDATION);
+        Map<String, String[]> mapQuery = req.getParameterMap();
+        try {
+            for (String key : mapQuery.keySet()) {
+                String[] queryValue = mapQuery.get(key);
+                if (queryValue == null || queryValue.length != 1)
+                    throw new IncorrectRequestException(INCORRECT_REQUEST_ARGS);
+                if (!ControlerConstants.STUDENT_REQUEST_PARAMETERS.contains(key))
+                    throw new IncorrectRequestException(INCORRECT_REQUEST_ARGS);
+                switch (key) {
+                    case RQ_ID -> {
+                        if (mapQuery.get(key).length != 1) throw new IncorrectRequestException(INCORRECT_REQUEST_ARGS);
+                        else Integer.parseInt(mapQuery.get(key)[0]);
+                    }
+                    case RQ_BIRTHDAY -> {
+                        if (mapQuery.get(key).length != 1) throw new IncorrectRequestException(INCORRECT_REQUEST_ARGS);
+                        else LocalDate.parse(mapQuery.get(key)[0]);
+                    }
+                }
+            }
+        logger.trace(END_VALIDATION_SUCCESSFUL);
+        } catch (NumberFormatException e) {
+            logger.trace(END_VALIDATION_UNSUCCESSFUL,e.getMessage());
+            throw new IncorrectRequestException(INCORRECT_NUMBER_FORMAT);
+        } catch (DateTimeParseException e) {
+            logger.trace(END_VALIDATION_UNSUCCESSFUL,e.getMessage());
+            throw new IncorrectRequestException(INCORRECT_DATE_FORMAT);
         }
-        return true;
     }
-    private void CheckRequestForPutDelete(HttpServletRequest req, HttpServletResponse resp) throws IOException {
-        if(req.getPathInfo()==null || !isPathCorrect(req)) {
-            logger.info(ControlerConstants.INCORRECT_REQUEST+ req.getRequestURI());
-            resp.sendError(400, ControlerConstants.INCORRECT_REQUEST+ req.getRequestURI());
+
+
+    private void doPutDeleteValidation(HttpServletRequest req) throws IncorrectRequestException {
+        logger.trace(START_VALIDATION);
+        if (req.getPathInfo() == null || req.getQueryString() != null)
+            throw new IncorrectRequestException(INCORRECT_REQUEST_ARGS);
+        try {
+            Integer.parseInt(req.getPathInfo().replaceFirst(PATH_SEPARATOR, EMPTY));
+        } catch (NumberFormatException e) {
+            logger.trace(END_VALIDATION_UNSUCCESSFUL,e.getMessage());
+            throw new IncorrectRequestException(INCORRECT_NUMBER_FORMAT);
         }
+
     }
-    private void CheckRequestForPost(HttpServletRequest req, HttpServletResponse resp) throws IOException {
-        if(req.getPathInfo()!=null || req.getQueryString()!=null) {
-            logger.info(ControlerConstants.INCORRECT_REQUEST+ req.getRequestURI());
-            resp.sendError(400, ControlerConstants.INCORRECT_REQUEST+ req.getRequestURI());
-        }
+
+    private void doPostValidation(HttpServletRequest req) throws IncorrectRequestException {
+        if (req.getPathInfo() != null || req.getQueryString() != null)
+            throw new IncorrectRequestException(INCORRECT_REQUEST_ARGS);
     }
 }

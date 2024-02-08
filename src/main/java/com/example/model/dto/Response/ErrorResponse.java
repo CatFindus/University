@@ -9,8 +9,9 @@ import lombok.Getter;
 
 import java.time.LocalDateTime;
 import java.util.UUID;
+
 @Getter
-public class ErrorResponse implements DtoResponse{
+public class ErrorResponse implements DtoResponse {
     private final String msg;
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss")
     @JsonDeserialize(using = LocalDateTimeDeserializer.class)

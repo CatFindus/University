@@ -9,8 +9,9 @@ import lombok.Data;
 
 import java.time.LocalDate;
 import java.util.Set;
+
 @Data
-public class ScheduleResponse implements DtoResponse{
+public class ScheduleResponse implements DtoResponse {
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd")
     @JsonDeserialize(using = LocalDateDeserializer.class)
     @JsonSerialize(using = LocalDateSerializer.class)

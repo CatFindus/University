@@ -1,18 +1,20 @@
 package com.example.model.dto.Request;
 
-import com.example.model.vo.Subject;
+import com.example.consts.LoggerConstants;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.fasterxml.jackson.datatype.jsr310.deser.LocalDateDeserializer;
 import com.fasterxml.jackson.datatype.jsr310.ser.LocalDateSerializer;
 import lombok.Data;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.time.LocalDate;
-import java.util.HashSet;
-import java.util.Set;
+
 @Data
-public class TeacherRequest implements DtoRequest{
+public class TeacherRequest implements DtoRequest {
+    private final static Logger logger = LoggerFactory.getLogger(TeacherRequest.class);
     private String firstName;
     private String middleName;
     private String surName;
@@ -25,5 +27,14 @@ public class TeacherRequest implements DtoRequest{
     @JsonSerialize(using = LocalDateSerializer.class)
     private LocalDate experienceBegin;
     private String phoneNumber;
-    //private Set<Subject> subjects;
+
+    public TeacherRequest(String firstName, String middleName, String surName, LocalDate birthDay, LocalDate experienceBegin, String phoneNumber) {
+        this.firstName = firstName;
+        this.middleName = middleName;
+        this.surName = surName;
+        this.birthDay = birthDay;
+        this.experienceBegin = experienceBegin;
+        this.phoneNumber = phoneNumber;
+        logger.debug(LoggerConstants.POJO_CREATED, this);
+    }
 }
