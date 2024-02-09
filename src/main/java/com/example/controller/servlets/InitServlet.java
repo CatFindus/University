@@ -16,7 +16,7 @@ import java.time.LocalDate;
 @WebServlet(name = "InitServlet", urlPatterns = "/init/*")
 public class InitServlet extends HttpServlet {
     @Override
-    protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+    protected void doGet(HttpServletRequest req, HttpServletResponse resp) {
         RepositoryFacade repo = new RepositoryFacade();
         for (int i = 1; i < 20; i++) {
             String stdfn = String.format("Student FN %d", i);

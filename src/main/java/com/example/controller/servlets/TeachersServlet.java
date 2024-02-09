@@ -1,6 +1,5 @@
 package com.example.controller.servlets;
 
-import com.example.consts.LoggerConstants;
 import com.example.exeptions.IncorrectRequestException;
 import com.example.exeptions.NoDataException;
 import com.example.mapper.TeacherMapper;
