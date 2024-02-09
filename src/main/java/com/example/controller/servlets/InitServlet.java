@@ -4,13 +4,11 @@ import com.example.model.vo.Group;
 import com.example.model.vo.Student;
 import com.example.model.vo.Teacher;
 import com.example.repository.RepositoryFacade;
-import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
-import java.io.IOException;
 import java.time.LocalDate;
 
 @WebServlet(name = "InitServlet", urlPatterns = "/init/*")

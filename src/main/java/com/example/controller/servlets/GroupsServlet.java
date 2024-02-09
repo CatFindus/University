@@ -14,6 +14,7 @@ import com.example.model.service.GroupService;
 import com.example.model.service.Service;
 import com.example.model.service.StudentService;
 import com.example.model.vo.*;
+import com.example.validators.requests.GroupsValidator;
 import com.example.view.JsonView;
 import com.example.view.View;
 import jakarta.servlet.ServletException;
@@ -57,7 +58,7 @@ public class GroupsServlet extends HttpServlet {
         logger.trace(DO_GET_BEGIN);
         initialization(resp);
         try {
-            doGetValidation(req);
+            new GroupsValidator(req).validate();
             if (req.getPathInfo() != null) {
                 String[] paths = req.getPathInfo().replaceFirst(PATH_SEPARATOR, EMPTY).split(PATH_SEPARATOR);
                 List<DtoResponse> responseList = new ArrayList<>();
@@ -78,31 +79,14 @@ public class GroupsServlet extends HttpServlet {
         super.doGet(req, resp);
     }
 
-    private void doGetValidation(HttpServletRequest req) throws IncorrectRequestException {
-        logger.trace(START_VALIDATION);
-        if (req.getPathInfo() != null) {
-            try {
-                String[] paths = req.getPathInfo().replaceFirst(PATH_SEPARATOR, EMPTY).split(PATH_SEPARATOR);
-                for (String path : paths) Integer.parseInt(path);
 
-            } catch (NumberFormatException e) {
-                logger.trace(END_VALIDATION_UNSUCCESSFUL, e.getMessage());
-                throw new IncorrectRequestException(INCORRECT_NUMBER_FORMAT);
-            }
-        } else {
-            for (String key : req.getParameterMap().keySet())
-                if (!GROUP_REQUEST_PARAMETERS.contains(key))
-                    throw new IncorrectRequestException(INCORRECT_REQUEST_ARGS);
-        }
-        logger.trace(END_VALIDATION_SUCCESSFUL);
-    }
 
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws IOException {
         logger.trace(DO_POST_BEGIN);
         initialization(resp);
         try {
-            doPostValidation(req);
+            new GroupsValidator(req).validate();
             if (req.getPathInfo() == null && req.getQueryString() == null) addGroup(req, resp);
             else addStudentsToGroup(req);
             logger.trace(DO_POST_END);
@@ -151,37 +135,14 @@ public class GroupsServlet extends HttpServlet {
         }
     }
 
-    private void doPostValidation(HttpServletRequest req) throws IncorrectRequestException {
-        logger.trace(START_VALIDATION);
-        boolean haveNoArgs = req.getPathInfo() == null && req.getQueryString() == null;
-        if (haveNoArgs) return;
-        boolean haveQueryArgs = req.getQueryString() != null;
-        String[] paths = req.getPathInfo().replaceFirst(PATH_SEPARATOR, EMPTY).split(PATH_SEPARATOR);
-        try {
-            if (haveQueryArgs) {
-                if (paths.length != 1) throw new IncorrectRequestException();
-                Integer.parseInt(paths[0]);
-                Map<String, String[]> parameterMap = req.getParameterMap();
-                if (parameterMap.size() != 1 && !parameterMap.containsKey(RQ_ID))
-                    throw new IncorrectRequestException(INCORRECT_REQUEST_ARGS);
-                for (String value : parameterMap.get(RQ_ID)) Integer.parseInt(value);
-            } else {
-                if (paths.length <= 1) throw new IncorrectRequestException(INCORRECT_REQUEST_ARGS);
-                for (String path : paths) Integer.parseInt(path);
-            }
-            logger.trace(END_VALIDATION_SUCCESSFUL);
-        } catch (NumberFormatException e) {
-            logger.trace(END_VALIDATION_UNSUCCESSFUL, e.getMessage());
-            throw new IncorrectRequestException(INCORRECT_NUMBER_FORMAT);
-        }
-    }
+
 
     @Override
     protected void doPut(HttpServletRequest req, HttpServletResponse resp) throws IOException {
         logger.trace(DO_PUT_BEGIN);
         initialization(resp);
         try {
-            doPutValidation(req);
+            new GroupsValidator(req).validate();
             String stringId = req.getPathInfo().replaceFirst(PATH_SEPARATOR, EMPTY);
             GroupRequest groupRequest = jsonMapper.getDtoFromRequest(GroupRequest.class, req.getReader());
             List<DtoResponse> response = service.update(stringId, groupRequest);
@@ -194,26 +155,14 @@ public class GroupsServlet extends HttpServlet {
         }
     }
 
-    private void doPutValidation(HttpServletRequest req) throws IncorrectRequestException {
-        logger.trace(START_VALIDATION);
-        if (req.getPathInfo() == null) {
-            throw new IncorrectRequestException(INCORRECT_PATH_FORMAT);
-        }
-        try {
-            Integer.parseInt(req.getPathInfo().replaceFirst(PATH_SEPARATOR, EMPTY));
-            logger.trace(END_VALIDATION_SUCCESSFUL);
-        } catch (NumberFormatException e) {
-            logger.trace(END_VALIDATION_UNSUCCESSFUL, e.getMessage());
-            throw new IncorrectRequestException(INCORRECT_NUMBER_FORMAT);
-        }
-    }
+
 
     @Override
     protected void doDelete(HttpServletRequest req, HttpServletResponse resp) {
         logger.trace(DO_DELETE_BEGIN);
         initialization(resp);
         try {
-            doDeleteValidation(req);
+            new GroupsValidator(req).validate();
             if (req.getQueryString() == null) {
                 String[] paths = req.getPathInfo().replaceFirst(PATH_SEPARATOR, EMPTY).split(PATH_SEPARATOR);
                 if (paths.length == 1) {
@@ -253,31 +202,5 @@ public class GroupsServlet extends HttpServlet {
         view.update(service.mappingVoToDto(List.of(group)));
     }
 
-    private void doDeleteValidation(HttpServletRequest req) throws IncorrectRequestException {
-        logger.trace(START_VALIDATION);
-        if (req.getPathInfo() == null) throw new IncorrectRequestException(INCORRECT_PATH_FORMAT);
-        if (req.getQueryString() != null) {
-            try {
-                Integer.parseInt(req.getPathInfo().replaceFirst(PATH_SEPARATOR, EMPTY));
-                Map<String, String[]> parameterMap = req.getParameterMap();
-                if (parameterMap.size() != 1 || !parameterMap.containsKey(RQ_ID))
-                    throw new IncorrectRequestException(INCORRECT_REQUEST_ARGS);
-                if (!Subject.containRequestName(req.getParameterMap().get(RQ_ID)[0]))
-                    throw new IncorrectRequestException(INCORRECT_REQUEST_ARGS);
 
-            } catch (NumberFormatException e) {
-                logger.trace(END_VALIDATION_UNSUCCESSFUL, e.getMessage());
-                throw new IncorrectRequestException(INCORRECT_NUMBER_FORMAT);
-            }
-        } else {
-            String[] paths = req.getPathInfo().replaceFirst(PATH_SEPARATOR, EMPTY).split(PATH_SEPARATOR);
-            if (paths.length < 1) throw new IncorrectRequestException(INCORRECT_REQUEST_ARGS);
-            try {
-                for (String path : paths) Integer.parseInt(path);
-            } catch (NumberFormatException e) {
-                throw new IncorrectRequestException(INCORRECT_REQUEST_ARGS);
-            }
-        }
-        logger.trace(END_VALIDATION_SUCCESSFUL);
-    }
 }

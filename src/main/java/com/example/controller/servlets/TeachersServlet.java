@@ -15,6 +15,7 @@ import com.example.model.service.TeacherService;
 import com.example.model.vo.ModelUnit;
 import com.example.model.vo.Subject;
 import com.example.model.vo.Teacher;
+import com.example.validators.requests.TeachersValidator;
 import com.example.view.JsonView;
 import com.example.view.View;
 import jakarta.servlet.annotation.WebServlet;
@@ -27,7 +28,6 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 import static com.example.consts.ControlerConstants.*;
 import static com.example.consts.LoggerConstants.*;
@@ -53,7 +53,7 @@ public class TeachersServlet extends HttpServlet {
         logger.trace(DO_GET_BEGIN);
         initialization(resp);
         try {
-            doGetValidation(req);
+            new TeachersValidator(req).validate();
             List<ModelUnit> teachers = new ArrayList<>();
             if (req.getPathInfo() != null) {
                 getTeachersByIds(req, teachers);
@@ -77,7 +77,7 @@ public class TeachersServlet extends HttpServlet {
         logger.trace(DO_POST_BEGIN);
         initialization(resp);
         try {
-            doPostValidation(req);
+            new TeachersValidator(req).validate();
             if (req.getPathInfo() == null && req.getQueryString() == null) addTeacher(req, resp);
             else addToTeachersSubjects(req);
             logger.trace(DO_POST_END);
@@ -115,34 +115,13 @@ public class TeachersServlet extends HttpServlet {
 
     }
 
-    private void doPostValidation(HttpServletRequest req) throws IncorrectRequestException {
-        logger.trace(START_VALIDATION);
-        boolean haveAllArgs = req.getPathInfo() != null && req.getQueryString() != null;
-        boolean haveNoArgs = req.getPathInfo() == null && req.getQueryString() == null;
-        if (!(haveAllArgs || haveNoArgs)) throw new IncorrectRequestException(INCORRECT_REQUEST_ARGS);
-        else if (req.getPathInfo() != null && req.getQueryString() != null) {
-            try {
-                String[] paths = req.getPathInfo().replaceFirst(PATH_SEPARATOR, EMPTY).split(PATH_SEPARATOR);
-                for (String path : paths) Integer.parseInt(path);
-                Map<String, String[]> parameterMap = req.getParameterMap();
-                if (parameterMap.size() != 1 || !parameterMap.containsKey(SUBJECT_PARAMETER))
-                    throw new IncorrectRequestException(INCORRECT_REQUEST_ARGS);
-                for (String value : req.getParameterMap().get(SUBJECT_PARAMETER))
-                    if (!Subject.containRequestName(value)) throw new IncorrectRequestException(INCORRECT_REQUEST_ARGS);
-                logger.trace(END_VALIDATION_SUCCESSFUL);
-            } catch (NumberFormatException e) {
-                logger.trace(END_VALIDATION_UNSUCCESSFUL, e.getMessage());
-                throw new IncorrectRequestException(INCORRECT_NUMBER_FORMAT);
-            }
-        }
-    }
 
     @Override
     protected void doPut(HttpServletRequest req, HttpServletResponse resp) throws IOException {
         logger.trace(DO_PUT_BEGIN);
         initialization(resp);
         try {
-            checkRequestForPut(req);
+            new TeachersValidator(req).validate();
             String stringId = req.getPathInfo().replaceFirst(PATH_SEPARATOR, EMPTY);
             TeacherRequest teacherRequest = jsonMapper.getDtoFromRequest(TeacherRequest.class, req.getReader());
             List<DtoResponse> response = service.update(stringId, teacherRequest);
@@ -155,24 +134,13 @@ public class TeachersServlet extends HttpServlet {
         }
     }
 
-    private void checkRequestForPut(HttpServletRequest req) throws IncorrectRequestException {
-        logger.trace(START_VALIDATION);
-        if (req.getPathInfo() == null) throw new IncorrectRequestException(INCORRECT_REQUEST_ARGS);
-        try {
-            Integer.parseInt(req.getPathInfo().replaceFirst(PATH_SEPARATOR, EMPTY));
-            logger.trace(END_VALIDATION_SUCCESSFUL);
-        } catch (NumberFormatException e) {
-            logger.trace(END_VALIDATION_UNSUCCESSFUL, e.getMessage());
-            throw new IncorrectRequestException(INCORRECT_NUMBER_FORMAT);
-        }
-    }
 
     @Override
     protected void doDelete(HttpServletRequest req, HttpServletResponse resp) {
         logger.trace(DO_DELETE_BEGIN);
         initialization(resp);
         try {
-            doDeleteValidator(req);
+            new TeachersValidator(req).validate();
             if (req.getQueryString() == null) {
                 String stringID = req.getPathInfo().replaceFirst(PATH_SEPARATOR, EMPTY);
                 service.delete(stringID);
@@ -198,57 +166,5 @@ public class TeachersServlet extends HttpServlet {
         view.update(service.mappingVoToDto(units));
     }
 
-    private void doDeleteValidator(HttpServletRequest req) throws IncorrectRequestException {
-        logger.trace(START_VALIDATION);
-        if (req.getPathInfo() == null) throw new IncorrectRequestException(INCORRECT_PATH_FORMAT);
-        if (req.getQueryString() != null) {
-            try {
-                Integer.parseInt(req.getPathInfo().replaceFirst(PATH_SEPARATOR, EMPTY));
-                Map<String, String[]> parameterMap = req.getParameterMap();
-                if (parameterMap.size() != 1 || !parameterMap.containsKey(SUBJECT_PARAMETER))
-                    throw new IncorrectRequestException(INCORRECT_REQUEST_ARGS);
-                if (!Subject.containRequestName(req.getParameterMap().get(SUBJECT_PARAMETER)[0]))
-                    throw new IncorrectRequestException(INCORRECT_BODY_OF_REQUEST);
-                logger.trace(END_VALIDATION_SUCCESSFUL);
-            } catch (NumberFormatException e) {
-                logger.trace(END_VALIDATION_UNSUCCESSFUL, e.getMessage());
-                throw new IncorrectRequestException(INCORRECT_NUMBER_FORMAT);
-            }
-        }
-    }
 
-    private void doGetValidation(HttpServletRequest req) throws IncorrectRequestException {
-        logger.trace(START_VALIDATION);
-        String path = req.getPathInfo();
-        String query = req.getQueryString();
-        if (path != null && query != null) throw new IncorrectRequestException(INCORRECT_REQUEST_ARGS);
-        else if (path != null) pathValidation(req);
-        else if (query != null) queryValidation(req);
-        logger.trace(END_VALIDATION_SUCCESSFUL);
-    }
-
-    private void pathValidation(HttpServletRequest req) throws IncorrectRequestException {
-        logger.trace(START_VALIDATION);
-        try {
-            String[] paths = req.getPathInfo().replaceFirst(PATH_SEPARATOR, EMPTY).split(PATH_SEPARATOR);
-            for (String p : paths) Integer.parseInt(p);
-            logger.trace(END_VALIDATION_SUCCESSFUL);
-        } catch (NumberFormatException e) {
-            logger.trace(END_VALIDATION_UNSUCCESSFUL, e.getMessage());
-            throw new IncorrectRequestException(INCORRECT_NUMBER_FORMAT);
-        }
-    }
-
-    private void queryValidation(HttpServletRequest req) throws IncorrectRequestException {
-        logger.trace(START_VALIDATION);
-        Map<String, String[]> mapQuery = req.getParameterMap();
-        if (mapQuery == null) throw new IncorrectRequestException(INCORRECT_REQUEST_ARGS);
-        for (String key : mapQuery.keySet()) {
-            String[] queryValue = mapQuery.get(key);
-            if (queryValue == null || queryValue.length != 1)
-                throw new IncorrectRequestException(INCORRECT_REQUEST_ARGS);
-            if (!TEACHER_REQUEST_PARAMETERS.contains(key)) throw new IncorrectRequestException(INCORRECT_REQUEST_ARGS);
-        }
-        logger.trace(END_VALIDATION_SUCCESSFUL);
-    }
 }
