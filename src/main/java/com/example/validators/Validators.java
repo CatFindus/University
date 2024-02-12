@@ -12,8 +12,9 @@ public abstract class Validators {
 
     protected abstract void validation() throws IncorrectRequestException;
 
-    public void then(Validators validators) {
+    public Validators then(Validators validators) {
         if (next!=null) next.then(validators);
         else next = validators;
+        return this;
     }
 }

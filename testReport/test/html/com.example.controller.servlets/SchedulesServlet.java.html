@@ -1,0 +1,134 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="ru"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>SchedulesServlet.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">University</a> &gt; <a href="index.source.html" class="el_package">com.example.controller.servlets</a> &gt; <span class="el_source">SchedulesServlet.java</span></div><h1>SchedulesServlet.java</h1><pre class="source lang-java linenums">package com.example.controller.servlets;
+
+import com.example.exeptions.IncorrectRequestException;
+import com.example.exeptions.NoDataException;
+import com.example.mapper.ScheduleMapper;
+import com.example.mapper.ScheduleMapperImpl;
+import com.example.mapper.viewmapper.JsonMapper;
+import com.example.mapper.viewmapper.ViewMapper;
+import com.example.model.dto.Request.ScheduleUnitRequest;
+import com.example.model.dto.Response.DtoResponse;
+import com.example.model.dto.Response.ErrorResponse;
+import com.example.model.service.ScheduleService;
+import com.example.model.vo.ModelUnit;
+import com.example.model.vo.Schedule;
+import com.example.model.vo.ScheduleUnit;
+import com.example.validators.quantity.ScheduleQuantityValidator;
+import com.example.validators.requests.SchedulesValidator;
+import com.example.view.JsonView;
+import com.example.view.View;
+import jakarta.servlet.annotation.WebServlet;
+import jakarta.servlet.http.HttpServlet;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+
+import static com.example.consts.ControlerConstants.WARN_MSG;
+import static com.example.consts.LoggerConstants.*;
+
+@WebServlet(name = &quot;ScheduleServlet&quot;, urlPatterns = &quot;/schedules/*&quot;)
+<span class="nc" id="L35">public class SchedulesServlet extends HttpServlet {</span>
+<span class="nc" id="L36">    private static final Logger logger = LoggerFactory.getLogger(TeachersServlet.class);</span>
+    private transient View view;
+    private transient ScheduleService service;
+    private transient ViewMapper jsonMapper;
+    private transient ScheduleMapper mapper;
+
+    private void initialization(HttpServletResponse resp) {
+<span class="nc" id="L43">        view = new JsonView(resp);</span>
+<span class="nc" id="L44">        jsonMapper = new JsonMapper();</span>
+<span class="nc" id="L45">        service = new ScheduleService();</span>
+<span class="nc" id="L46">        mapper = new ScheduleMapperImpl();</span>
+<span class="nc" id="L47">    }</span>
+
+    @Override
+    protected void doGet(HttpServletRequest req, HttpServletResponse resp) {
+<span class="nc" id="L51">        logger.trace(DO_GET_BEGIN);</span>
+<span class="nc" id="L52">        initialization(resp);</span>
+        try {
+<span class="nc" id="L54">            new SchedulesValidator(req).validate();</span>
+<span class="nc" id="L55">            List&lt;ModelUnit&gt; units = service.getDataByParameters(req.getParameterMap());</span>
+<span class="nc bnc" id="L56" title="All 2 branches missed.">            if (units.isEmpty()) view.update(new ArrayList&lt;&gt;());</span>
+            else {
+<span class="nc" id="L58">                view.update(service.mappingVoToDto(units));</span>
+            }
+<span class="nc" id="L60">            logger.trace(DO_GET_END);</span>
+<span class="nc" id="L61">        } catch (IncorrectRequestException e) {</span>
+<span class="nc" id="L62">            ErrorResponse response = new ErrorResponse(e.getMessage());</span>
+<span class="nc" id="L63">            logger.warn(WARN_MSG, response.getErrorID(), e.getMessage());</span>
+<span class="nc" id="L64">            view.update(List.of(response));</span>
+<span class="nc" id="L65">        }</span>
+<span class="nc" id="L66">    }</span>
+
+
+
+
+
+    @Override
+    protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+<span class="nc" id="L74">        logger.trace(DO_POST_BEGIN);</span>
+<span class="nc" id="L75">        initialization(resp);</span>
+        try {
+<span class="nc" id="L77">            new SchedulesValidator(req).validate();</span>
+<span class="nc" id="L78">            ScheduleUnitRequest request = jsonMapper.getDtoFromRequest(ScheduleUnitRequest.class, req.getReader());</span>
+<span class="nc" id="L79">            ScheduleUnit unit = mapper.mapDtoToScheduleUnit(request);</span>
+<span class="nc" id="L80">            Schedule schedule = service.getScheduleForDate(unit.getBegin().toLocalDate());</span>
+<span class="nc bnc" id="L81" title="All 2 branches missed.">            if (schedule!=null) new ScheduleQuantityValidator(req,unit.getGroup(),schedule).validate();</span>
+<span class="nc bnc" id="L82" title="All 2 branches missed.">            if (service.create(unit)) {</span>
+<span class="nc" id="L83">                resp.setStatus(201);</span>
+<span class="nc" id="L84">                view.update(List.of(mapper.mapScheduleUnitToDto(unit)));</span>
+            } else {
+<span class="nc" id="L86">                resp.setStatus(200);</span>
+<span class="nc" id="L87">                view.update(new ArrayList&lt;&gt;());</span>
+
+            }
+<span class="nc" id="L90">            logger.trace(DO_POST_END);</span>
+<span class="nc" id="L91">        } catch (IncorrectRequestException e) {</span>
+<span class="nc" id="L92">            ErrorResponse response = new ErrorResponse(e.getMessage());</span>
+<span class="nc" id="L93">            logger.warn(WARN_MSG, response.getErrorID(), e.getMessage());</span>
+<span class="nc" id="L94">            view.update(List.of(response));</span>
+<span class="nc" id="L95">        }</span>
+<span class="nc" id="L96">    }</span>
+
+
+
+    @Override
+    protected void doPut(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+<span class="nc" id="L102">        logger.trace(DO_PUT_BEGIN);</span>
+<span class="nc" id="L103">        initialization(resp);</span>
+        try {
+<span class="nc" id="L105">            new SchedulesValidator(req).validate();</span>
+<span class="nc" id="L106">            ScheduleUnitRequest request = jsonMapper.getDtoFromRequest(ScheduleUnitRequest.class, req.getReader());</span>
+<span class="nc" id="L107">            List&lt;DtoResponse&gt; responses = service.update(req.getParameterMap(), request);</span>
+<span class="nc" id="L108">            view.update(responses);</span>
+<span class="nc" id="L109">            logger.trace(DO_PUT_END);</span>
+<span class="nc" id="L110">        } catch (IncorrectRequestException | NoDataException e) {</span>
+<span class="nc" id="L111">            ErrorResponse response = new ErrorResponse(e.getMessage());</span>
+<span class="nc" id="L112">            logger.warn(WARN_MSG, response.getErrorID(), e.getMessage());</span>
+<span class="nc" id="L113">            view.update(List.of(response));</span>
+<span class="nc" id="L114">        }</span>
+<span class="nc" id="L115">    }</span>
+
+    @Override
+    protected void doDelete(HttpServletRequest req, HttpServletResponse resp) {
+<span class="nc" id="L119">        logger.trace(DO_DELETE_BEGIN);</span>
+<span class="nc" id="L120">        initialization(resp);</span>
+        try {
+<span class="nc" id="L122">            new SchedulesValidator(req).validate();</span>
+<span class="nc" id="L123">            service.delete(req.getParameterMap());</span>
+<span class="nc" id="L124">            resp.setStatus(204);</span>
+<span class="nc" id="L125">            view.update(new ArrayList&lt;&gt;());</span>
+<span class="nc" id="L126">            logger.trace(DO_DELETE_END);</span>
+<span class="nc" id="L127">        } catch (IncorrectRequestException | NoDataException e) {</span>
+<span class="nc" id="L128">            ErrorResponse response = new ErrorResponse(e.getMessage());</span>
+<span class="nc" id="L129">            logger.warn(WARN_MSG, response.getErrorID(), e.getMessage());</span>
+<span class="nc" id="L130">            view.update(List.of(response));</span>
+<span class="nc" id="L131">        }</span>
+<span class="nc" id="L132">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

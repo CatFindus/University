@@ -11,7 +11,7 @@ public enum Subject {
     HIGHTMATH("Hight Math", "hightmath"),
     LANGUAGES("Languages", "languages"),
     HISTORY_RELIGION("Religion History", "religionhistory"),
-    CULTURE_STUDIES("Culture Studies", "culturestufies"),
+    CULTURE_STUDIES("Culture Studies", "culturestudies"),
     PROGRAMMING("Programming", "programming"),
     PROBABILITY_THEORY("Probability Theory", "probabilitytheory"),
     MATANALYSIS("Matanalysis", "matanalysis"),

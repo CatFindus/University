@@ -1,5 +1,6 @@
 package com.example.model.vo;
 
+import lombok.AccessLevel;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
@@ -23,9 +24,13 @@ import static com.example.consts.ModelConstants.*;
 @Setter
 @EqualsAndHashCode
 public class Teacher implements ModelUnit {
+    @Getter(AccessLevel.NONE)
+    @Setter(AccessLevel.NONE)
     private static AtomicInteger idCount;
+    @Getter(AccessLevel.NONE)
     private final Logger logger = LoggerFactory.getLogger(Teacher.class);
-    private static Properties properties = new Properties();
+    @Getter(AccessLevel.NONE)
+    private final static Properties properties = new Properties();
 
     static {
         try (InputStream is = Objects.requireNonNull(Student.class.getClassLoader().getResource(MODEL_PROPERTY)).openStream()) {

@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="ru"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ControlerConstants.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">University</a> &gt; <a href="index.source.html" class="el_package">com.example.consts</a> &gt; <span class="el_source">ControlerConstants.java</span></div><h1>ControlerConstants.java</h1><pre class="source lang-java linenums">package com.example.consts;
+
+import lombok.experimental.UtilityClass;
+
+import java.util.List;
+
+import static com.example.consts.ModelConstants.*;
+
+@UtilityClass
+<span class="nc" id="L10">public class ControlerConstants {</span>
+    public static final String NO_DATA_FOUND = &quot;No data found for request&quot;;
+    public static final String INCORRECT_REQUEST_ARGS = &quot;Incorrect request args. No pass validation&quot;;
+<span class="fc" id="L13">    public static final List&lt;String&gt; STUDENT_REQUEST_PARAMETERS = List.of(RQ_FIRST_NAME, RQ_MIDDLE_NAME, RQ_SURNAME, RQ_GROUP_ID, RQ_GROUP_NUMBER, RQ_PHONE_NUMBER, RQ_BIRTHDAY, RQ_ID);</span>
+<span class="fc" id="L14">    public static final List&lt;String&gt; TEACHER_REQUEST_PARAMETERS = List.of(RQ_FIRST_NAME, RQ_MIDDLE_NAME, RQ_SURNAME, RQ_PHONE_NUMBER, RQ_BIRTHDAY, RQ_EXPERIENCE, RQ_SUBJECT, RQ_ID);</span>
+<span class="fc" id="L15">    public static final List&lt;String&gt; GROUP_REQUEST_PARAMETERS = List.of(RQ_NUMBER, RQ_ID);</span>
+<span class="fc" id="L16">    public static final List&lt;String&gt; SCHEDULE_REQUEST_PARAMETERS = List.of(RQ_BEGIN_DATE_TIME, RQ_END_DATE_TIME , RQ_STUDENT_ID, RQ_GROUP_ID, RQ_TEACHER_ID, RQ_SUBJECT);</span>
+    public static final String SUBJECT_PARAMETER = &quot;subject&quot;;
+    public static final String WARN_MSG = &quot;UUID:{}, message:{}&quot;;
+    public static final String NAME_REGEXP = &quot;[A-Za-z]{2,}&quot;;
+    public static final String PHONE_REGEXP = &quot;^((8|\\+7)[\\- ]?)?(\\(?\\d{3}\\)?[\\- ]?)?[\\d\\- ]{7,10}$&quot;;
+    public static final String NAME_INCORRECT = &quot;Incorrect firstname/middlename/surname&quot;;
+    public static final String PHONE_INCORRECT = &quot;Incorrect phone number&quot;;
+    public static final String BIRTHDAY_INCORRECT = &quot;Birthday no passed validation&quot;;
+    public static final String GET = &quot;GET&quot;;
+    public static final String POST = &quot;POST&quot;;
+    public static final String PUT = &quot;PUT&quot;;
+    public static final String DELETE = &quot;DELETE&quot;;
+    public static final String UNKNOWN_ERROR = &quot;UNKNOWN REQUEST ERROR&quot;;
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Configuration status="WARN">
     <Properties>
-        <Property name="LogLevel">info</Property>
+        <Property name="LogLevel">trace</Property>
         <Property name="ConsolePattern">%d{dd-MM-yy HH:mm:ss.SSS} %-5level %-15c{1} - %msg%n</Property>
         <Property name="FilePattern">%d{dd-MM-yy HH:mm:ss.SSS} [%t] %-5level %-15logger{1} - %msg %ex{full}%n</Property>
     </Properties>

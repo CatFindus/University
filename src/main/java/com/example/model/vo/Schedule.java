@@ -6,6 +6,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.time.LocalDate;
+import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ConcurrentSkipListSet;
 
@@ -35,5 +36,10 @@ public class Schedule implements ModelUnit {
         logger.trace(REMOVE_FROM_OBJECT, removed ? SUCCESS : UNSUCCESSFUL);
         return removed;
     }
+
+    public List<ScheduleUnit> getClassesByGroup(Group group) {
+        return schedules.stream().filter(unit -> unit.getGroup().equals(group)).toList();
+    }
+
 }
 

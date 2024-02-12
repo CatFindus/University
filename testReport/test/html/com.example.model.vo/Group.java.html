@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="ru"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Group.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">University</a> &gt; <a href="index.source.html" class="el_package">com.example.model.vo</a> &gt; <span class="el_source">Group.java</span></div><h1>Group.java</h1><pre class="source lang-java linenums">package com.example.model.vo;
+
+import lombok.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.Objects;
+import java.util.Properties;
+import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.atomic.AtomicInteger;
+
+import static com.example.consts.LoggerConstants.*;
+import static com.example.consts.ModelConstants.*;
+
+<span class="pc bpc" id="L17" title="29 of 30 branches missed.">@Data</span>
+public class Group implements ModelUnit {
+    @Getter(AccessLevel.NONE)
+    @Setter(AccessLevel.NONE)
+    private static AtomicInteger idCount;
+    @Getter(AccessLevel.NONE)
+<span class="fc" id="L23">    private static final Logger logger = LoggerFactory.getLogger(Group.class);</span>
+    @Getter(AccessLevel.NONE)
+<span class="fc" id="L25">    private static final Properties properties = new Properties();</span>
+
+    static {
+<span class="fc" id="L28">        try (InputStream is = Objects.requireNonNull(Student.class.getClassLoader().getResource(MODEL_PROPERTY)).openStream()) {</span>
+<span class="fc" id="L29">            properties.load(is);</span>
+<span class="nc" id="L30">        } catch (IOException ignored) {</span>
+<span class="fc" id="L31">        }</span>
+<span class="fc" id="L32">        idCount = new AtomicInteger(Integer.parseInt(properties.getProperty(GROUP_ID_COUNT, DEFAULT_GROUP_ID_COUNT)));</span>
+<span class="fc" id="L33">    }</span>
+
+<span class="fc" id="L35">    private final Integer id;</span>
+<span class="fc" id="L36">    private String number;</span>
+<span class="fc" id="L37">    private final CopyOnWriteArrayList&lt;Student&gt; students;</span>
+
+<span class="fc" id="L39">    public Group(String number) {</span>
+<span class="fc" id="L40">        this.id = idCount.getAndIncrement();</span>
+<span class="fc" id="L41">        this.number = number;</span>
+<span class="fc" id="L42">        students = new CopyOnWriteArrayList&lt;&gt;();</span>
+<span class="fc" id="L43">        logger.debug(POJO_CREATED, this);</span>
+<span class="fc" id="L44">    }</span>
+
+<span class="fc" id="L46">    public Group() {</span>
+<span class="fc" id="L47">        this.id = idCount.getAndIncrement();</span>
+<span class="fc" id="L48">        students = new CopyOnWriteArrayList&lt;&gt;();</span>
+<span class="fc" id="L49">        logger.debug(POJO_CREATED, this);</span>
+<span class="fc" id="L50">    }</span>
+
+    public boolean hasNumber(String groupNumber) {
+<span class="pc bpc" id="L53" title="1 of 2 branches missed.">        if (groupNumber == null) return false;</span>
+<span class="fc" id="L54">        return this.number.equalsIgnoreCase(groupNumber);</span>
+    }
+
+    public boolean hasStudent(Student student) {
+<span class="pc bpc" id="L58" title="1 of 2 branches missed.">        if (student == null) return false;</span>
+<span class="fc" id="L59">        return students.contains(student);</span>
+    }
+
+    public boolean hasStudent(Integer id) {
+<span class="pc bpc" id="L63" title="1 of 2 branches missed.">        if (id == null) return false;</span>
+<span class="fc" id="L64">        return students.stream().anyMatch(s -&gt; s.hasId(id));</span>
+    }
+
+    @SuppressWarnings(&quot;UnusedReturnValue&quot;)
+    public boolean addStudent(Student student) {
+<span class="fc" id="L69">        boolean added = students.addIfAbsent(student);</span>
+<span class="fc bfc" id="L70" title="All 2 branches covered.">        logger.trace(ADDING_TO_OBJECT, added ? SUCCESS : UNSUCCESSFUL);</span>
+<span class="fc" id="L71">        return added;</span>
+    }
+
+    public int getStudentsQuantity() {
+<span class="fc" id="L75">        return students.size();</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

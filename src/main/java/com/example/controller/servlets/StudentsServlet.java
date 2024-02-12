@@ -14,6 +14,8 @@ import com.example.model.service.Service;
 import com.example.model.service.StudentService;
 import com.example.model.vo.ModelUnit;
 import com.example.model.vo.Student;
+import com.example.validators.parameters.NameValidator;
+import com.example.validators.parameters.PhoneValidator;
 import com.example.validators.requests.StudentsValidator;
 import com.example.view.JsonView;
 import com.example.view.View;
@@ -72,13 +74,15 @@ public class StudentsServlet extends HttpServlet {
         initialization(resp);
         try {
             new StudentsValidator(req).validate();
-            StudentRequest studentRequest;
+            StudentRequest sr;
             try {
-                studentRequest = jsonMapper.getDtoFromRequest(StudentRequest.class, req.getReader());
+                sr = jsonMapper.getDtoFromRequest(StudentRequest.class, req.getReader());
+                new NameValidator(sr.getFirstName(), sr.getMiddleName(), sr.getSurName()).
+                        then(new PhoneValidator(sr.getPhoneNumber())).validate();
             } catch (IOException e) {
                 throw new IncorrectRequestException(INCORRECT_BODY_OF_REQUEST);
             }
-            Student student = mapper.mapFromRequest(studentRequest);
+            Student student = mapper.mapFromRequest(sr);
             StudentResponse studentResponse = mapper.mapToResponse(student, null);
             if (service.create(student)) {
                 resp.setStatus(201);

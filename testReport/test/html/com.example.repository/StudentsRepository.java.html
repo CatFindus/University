@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="ru"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>StudentsRepository.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">University</a> &gt; <a href="index.source.html" class="el_package">com.example.repository</a> &gt; <span class="el_source">StudentsRepository.java</span></div><h1>StudentsRepository.java</h1><pre class="source lang-java linenums">package com.example.repository;
+
+import com.example.model.vo.Student;
+
+import java.time.LocalDate;
+import java.util.List;
+import java.util.concurrent.ConcurrentSkipListMap;
+import java.util.function.Predicate;
+import java.util.stream.Stream;
+
+public class StudentsRepository {
+<span class="fc" id="L12">    private static final StudentsRepository instance = new StudentsRepository();</span>
+    private final ConcurrentSkipListMap&lt;Integer, Student&gt; students;
+
+<span class="fc" id="L15">    private StudentsRepository() {</span>
+<span class="fc" id="L16">        students = new ConcurrentSkipListMap&lt;&gt;();</span>
+<span class="fc" id="L17">        students.put(3, new Student(&quot;1&quot;, &quot;2&quot;, &quot;3&quot;, LocalDate.of(2001, 12, 1), &quot;4&quot;));</span>
+<span class="fc" id="L18">    }</span>
+
+    static StudentsRepository getInstance() {
+<span class="fc" id="L21">        return instance;</span>
+    }
+
+    Student getStudentById(int id) {
+<span class="fc" id="L25">        return students.get(id);</span>
+    }
+
+    boolean addStudent(Student student) {
+<span class="pc bpc" id="L29" title="1 of 2 branches missed.">        if (students.containsValue(student)) return false;</span>
+<span class="fc" id="L30">        else students.put(student.getId(), student);</span>
+<span class="fc" id="L31">        return true;</span>
+    }
+
+    boolean removeStudent(Integer id) {
+<span class="nc bnc" id="L35" title="All 2 branches missed.">        return students.remove(id) != null;</span>
+    }
+
+    public List&lt;Student&gt; getStudents(List&lt;Predicate&lt;Student&gt;&gt; predicates) {
+<span class="fc" id="L39">        Stream&lt;Student&gt; stream = students.values().stream();</span>
+<span class="fc bfc" id="L40" title="All 2 branches covered.">        for (Predicate&lt;Student&gt; predicate : predicates) stream = stream.filter(predicate);</span>
+<span class="fc" id="L41">        return stream.toList();</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

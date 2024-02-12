@@ -15,6 +15,8 @@ import com.example.model.service.TeacherService;
 import com.example.model.vo.ModelUnit;
 import com.example.model.vo.Subject;
 import com.example.model.vo.Teacher;
+import com.example.validators.parameters.NameValidator;
+import com.example.validators.parameters.PhoneValidator;
 import com.example.validators.requests.TeachersValidator;
 import com.example.view.JsonView;
 import com.example.view.View;
@@ -81,16 +83,17 @@ public class TeachersServlet extends HttpServlet {
             if (req.getPathInfo() == null && req.getQueryString() == null) addTeacher(req, resp);
             else addToTeachersSubjects(req);
             logger.trace(DO_POST_END);
-        } catch (IncorrectRequestException e) {
+        } catch (IncorrectRequestException | NoDataException e) {
             ErrorResponse response = new ErrorResponse(e.getMessage());
             logger.warn(WARN_MSG, response.getErrorID(), e.getMessage());
             view.update(List.of(response));
         }
     }
 
-    private void addToTeachersSubjects(HttpServletRequest req) throws IncorrectRequestException {
+    private void addToTeachersSubjects(HttpServletRequest req) throws IncorrectRequestException, NoDataException {
         List<ModelUnit> teachers = new ArrayList<>();
         getTeachersByIds(req, teachers);
+        if (teachers.isEmpty()) throw new NoDataException(NO_DATA_FOUND);
         String[] subjectRequest = req.getParameterMap().get(SUBJECT_PARAMETER);
         List<Subject> subjects = new ArrayList<>();
         for (String subjectString : subjectRequest) subjects.add(Subject.getSubject(subjectString));
@@ -104,9 +107,11 @@ public class TeachersServlet extends HttpServlet {
 
     private void addTeacher(HttpServletRequest req, HttpServletResponse resp) throws IOException, IncorrectRequestException {
 
-        TeacherRequest teacherRequest;
-        teacherRequest = jsonMapper.getDtoFromRequest(TeacherRequest.class, req.getReader());
-        Teacher teacher = mapper.mapFromRequest(teacherRequest);
+        TeacherRequest tr;
+        tr = jsonMapper.getDtoFromRequest(TeacherRequest.class, req.getReader());
+        new NameValidator(tr.getFirstName(), tr.getMiddleName(), tr.getSurName()).
+                then(new PhoneValidator(tr.getPhoneNumber())).validate();
+        Teacher teacher = mapper.mapFromRequest(tr);
         TeacherResponse teacherResponse = mapper.mapToResponse(teacher, Integer.toString(teacher.getExperience()));
         if (service.create(teacher)) {
             resp.setStatus(201);

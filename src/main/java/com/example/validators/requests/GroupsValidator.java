@@ -94,9 +94,7 @@ public class GroupsValidator extends Validators {
                 Map<String, String[]> parameterMap = req.getParameterMap();
                 if (parameterMap.size() != 1 || !parameterMap.containsKey(RQ_ID))
                     throw new IncorrectRequestException(INCORRECT_REQUEST_ARGS);
-                if (!Subject.containRequestName(req.getParameterMap().get(RQ_ID)[0]))
-                    throw new IncorrectRequestException(INCORRECT_REQUEST_ARGS);
-
+                for (String id:parameterMap.get(RQ_ID)) Integer.parseInt(id);
             } catch (NumberFormatException e) {
                 logger.trace(END_VALIDATION_UNSUCCESSFUL, e.getMessage());
                 throw new IncorrectRequestException(INCORRECT_NUMBER_FORMAT);

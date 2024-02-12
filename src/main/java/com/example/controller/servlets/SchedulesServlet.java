@@ -11,7 +11,9 @@ import com.example.model.dto.Response.DtoResponse;
 import com.example.model.dto.Response.ErrorResponse;
 import com.example.model.service.ScheduleService;
 import com.example.model.vo.ModelUnit;
+import com.example.model.vo.Schedule;
 import com.example.model.vo.ScheduleUnit;
+import com.example.validators.quantity.ScheduleQuantityValidator;
 import com.example.validators.requests.SchedulesValidator;
 import com.example.view.JsonView;
 import com.example.view.View;
@@ -75,7 +77,9 @@ public class SchedulesServlet extends HttpServlet {
             new SchedulesValidator(req).validate();
             ScheduleUnitRequest request = jsonMapper.getDtoFromRequest(ScheduleUnitRequest.class, req.getReader());
             ScheduleUnit unit = mapper.mapDtoToScheduleUnit(request);
-            if (unit != null && service.create(unit)) {
+            Schedule schedule = service.getScheduleForDate(unit.getBegin().toLocalDate());
+            if (schedule!=null) new ScheduleQuantityValidator(req,unit.getGroup(),schedule).validate();
+            if (service.create(unit)) {
                 resp.setStatus(201);
                 view.update(List.of(mapper.mapScheduleUnitToDto(unit)));
             } else {

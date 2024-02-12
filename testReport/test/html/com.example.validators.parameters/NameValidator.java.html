@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="ru"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>NameValidator.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">University</a> &gt; <a href="index.source.html" class="el_package">com.example.validators.parameters</a> &gt; <span class="el_source">NameValidator.java</span></div><h1>NameValidator.java</h1><pre class="source lang-java linenums">package com.example.validators.parameters;
+
+import com.example.exeptions.IncorrectRequestException;
+import com.example.validators.Validators;
+import lombok.AllArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+import static com.example.consts.ControlerConstants.NAME_INCORRECT;
+import static com.example.consts.ControlerConstants.NAME_REGEXP;
+import static com.example.consts.LoggerConstants.*;
+
+<span class="fc" id="L16">@AllArgsConstructor</span>
+public class NameValidator extends Validators {
+<span class="fc" id="L18">    private static final Logger logger = LoggerFactory.getLogger(NameValidator.class);</span>
+    private String firstName, middleName, surName;
+    @Override
+    protected void validation() throws IncorrectRequestException {
+<span class="fc" id="L22">        logger.trace(START_VALIDATION);</span>
+
+<span class="fc" id="L24">        Pattern pattern = Pattern.compile(NAME_REGEXP, Pattern.UNICODE_CHARACTER_CLASS);</span>
+        Matcher matcher;
+<span class="pc bpc" id="L26" title="1 of 2 branches missed.">        if(firstName!=null) {</span>
+<span class="fc" id="L27">            matcher=pattern.matcher(firstName);</span>
+<span class="fc bfc" id="L28" title="All 2 branches covered.">            if (!matcher.matches()) {</span>
+<span class="fc" id="L29">                logger.trace(END_VALIDATION_UNSUCCESSFUL, firstName);</span>
+<span class="fc" id="L30">                throw new IncorrectRequestException(NAME_INCORRECT);</span>
+            }
+        }
+<span class="pc bpc" id="L33" title="1 of 2 branches missed.">        if (middleName!=null) {</span>
+<span class="fc" id="L34">            matcher=pattern.matcher(middleName);</span>
+<span class="pc bpc" id="L35" title="1 of 2 branches missed.">            if (!matcher.matches()) {</span>
+<span class="nc" id="L36">                logger.trace(END_VALIDATION_UNSUCCESSFUL, middleName);</span>
+<span class="nc" id="L37">                throw new IncorrectRequestException(NAME_INCORRECT);</span>
+            }
+        }
+<span class="pc bpc" id="L40" title="1 of 2 branches missed.">        if (surName!=null) {</span>
+<span class="fc" id="L41">            matcher=pattern.matcher(surName);</span>
+<span class="pc bpc" id="L42" title="1 of 2 branches missed.">            if (!matcher.matches()) {</span>
+<span class="nc" id="L43">                logger.trace(END_VALIDATION_UNSUCCESSFUL, surName);</span>
+<span class="nc" id="L44">                throw new IncorrectRequestException(NAME_INCORRECT);</span>
+            }
+        }
+<span class="fc" id="L47">        logger.trace(END_VALIDATION_SUCCESSFUL);</span>
+<span class="fc" id="L48">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

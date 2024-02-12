@@ -1,0 +1,176 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="ru"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>TeachersServlet.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">University</a> &gt; <a href="index.source.html" class="el_package">com.example.controller.servlets</a> &gt; <span class="el_source">TeachersServlet.java</span></div><h1>TeachersServlet.java</h1><pre class="source lang-java linenums">package com.example.controller.servlets;
+
+import com.example.exeptions.IncorrectRequestException;
+import com.example.exeptions.NoDataException;
+import com.example.mapper.TeacherMapper;
+import com.example.mapper.TeacherMapperImpl;
+import com.example.mapper.viewmapper.JsonMapper;
+import com.example.mapper.viewmapper.ViewMapper;
+import com.example.model.dto.Request.TeacherRequest;
+import com.example.model.dto.Response.DtoResponse;
+import com.example.model.dto.Response.ErrorResponse;
+import com.example.model.dto.Response.TeacherResponse;
+import com.example.model.service.Service;
+import com.example.model.service.TeacherService;
+import com.example.model.vo.ModelUnit;
+import com.example.model.vo.Subject;
+import com.example.model.vo.Teacher;
+import com.example.validators.parameters.NameValidator;
+import com.example.validators.parameters.PhoneValidator;
+import com.example.validators.requests.TeachersValidator;
+import com.example.view.JsonView;
+import com.example.view.View;
+import jakarta.servlet.annotation.WebServlet;
+import jakarta.servlet.http.HttpServlet;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+
+import static com.example.consts.ControlerConstants.*;
+import static com.example.consts.LoggerConstants.*;
+import static com.example.consts.ModelConstants.*;
+
+@WebServlet(name = &quot;TeachersServlet&quot;, urlPatterns = &quot;/teachers/*&quot;)
+<span class="nc" id="L39">public class TeachersServlet extends HttpServlet {</span>
+<span class="nc" id="L40">    private static final Logger logger = LoggerFactory.getLogger(TeachersServlet.class);</span>
+    private transient View view;
+    private transient Service service;
+    private transient ViewMapper jsonMapper;
+    private transient TeacherMapper mapper;
+
+    private void initialization(HttpServletResponse resp) {
+<span class="nc" id="L47">        view = new JsonView(resp);</span>
+<span class="nc" id="L48">        jsonMapper = new JsonMapper();</span>
+<span class="nc" id="L49">        service = new TeacherService();</span>
+<span class="nc" id="L50">        mapper = new TeacherMapperImpl();</span>
+<span class="nc" id="L51">    }</span>
+
+    @Override
+    protected void doGet(HttpServletRequest req, HttpServletResponse resp) {
+<span class="nc" id="L55">        logger.trace(DO_GET_BEGIN);</span>
+<span class="nc" id="L56">        initialization(resp);</span>
+        try {
+<span class="nc" id="L58">            new TeachersValidator(req).validate();</span>
+<span class="nc" id="L59">            List&lt;ModelUnit&gt; teachers = new ArrayList&lt;&gt;();</span>
+<span class="nc bnc" id="L60" title="All 2 branches missed.">            if (req.getPathInfo() != null) {</span>
+<span class="nc" id="L61">                getTeachersByIds(req, teachers);</span>
+<span class="nc" id="L62">            } else teachers = service.getDataByParameters(req.getParameterMap());</span>
+<span class="nc" id="L63">            view.update(service.mappingVoToDto(teachers));</span>
+<span class="nc" id="L64">            logger.trace(DO_GET_END);</span>
+<span class="nc" id="L65">        } catch (IncorrectRequestException e) {</span>
+<span class="nc" id="L66">            ErrorResponse response = new ErrorResponse(e.getMessage());</span>
+<span class="nc" id="L67">            logger.warn(WARN_MSG, response.getErrorID(), e.getMessage());</span>
+<span class="nc" id="L68">            view.update(List.of(response));</span>
+<span class="nc" id="L69">        }</span>
+<span class="nc" id="L70">    }</span>
+
+    private void getTeachersByIds(HttpServletRequest req, List&lt;ModelUnit&gt; teachers) throws IncorrectRequestException {
+<span class="nc" id="L73">        String[] paths = req.getPathInfo().replaceFirst(PATH_SEPARATOR, EMPTY).split(PATH_SEPARATOR);</span>
+<span class="nc bnc" id="L74" title="All 2 branches missed.">        for (String p : paths) teachers.addAll(service.getDataById(p));</span>
+<span class="nc" id="L75">    }</span>
+
+    @Override
+    protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+<span class="nc" id="L79">        logger.trace(DO_POST_BEGIN);</span>
+<span class="nc" id="L80">        initialization(resp);</span>
+        try {
+<span class="nc" id="L82">            new TeachersValidator(req).validate();</span>
+<span class="nc bnc" id="L83" title="All 4 branches missed.">            if (req.getPathInfo() == null &amp;&amp; req.getQueryString() == null) addTeacher(req, resp);</span>
+<span class="nc" id="L84">            else addToTeachersSubjects(req);</span>
+<span class="nc" id="L85">            logger.trace(DO_POST_END);</span>
+<span class="nc" id="L86">        } catch (IncorrectRequestException | NoDataException e) {</span>
+<span class="nc" id="L87">            ErrorResponse response = new ErrorResponse(e.getMessage());</span>
+<span class="nc" id="L88">            logger.warn(WARN_MSG, response.getErrorID(), e.getMessage());</span>
+<span class="nc" id="L89">            view.update(List.of(response));</span>
+<span class="nc" id="L90">        }</span>
+<span class="nc" id="L91">    }</span>
+
+    private void addToTeachersSubjects(HttpServletRequest req) throws IncorrectRequestException, NoDataException {
+<span class="nc" id="L94">        List&lt;ModelUnit&gt; teachers = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L95">        getTeachersByIds(req, teachers);</span>
+<span class="nc bnc" id="L96" title="All 2 branches missed.">        if (teachers.isEmpty()) throw new NoDataException(NO_DATA_FOUND);</span>
+<span class="nc" id="L97">        String[] subjectRequest = req.getParameterMap().get(SUBJECT_PARAMETER);</span>
+<span class="nc" id="L98">        List&lt;Subject&gt; subjects = new ArrayList&lt;&gt;();</span>
+<span class="nc bnc" id="L99" title="All 2 branches missed.">        for (String subjectString : subjectRequest) subjects.add(Subject.getSubject(subjectString));</span>
+<span class="nc bnc" id="L100" title="All 2 branches missed.">        for (ModelUnit unit : teachers) {</span>
+<span class="nc" id="L101">            Teacher teacher = (Teacher) unit;</span>
+<span class="nc bnc" id="L102" title="All 2 branches missed.">            if (teacher != null) teacher.getSubjects().addAll(subjects);</span>
+<span class="nc" id="L103">        }</span>
+<span class="nc" id="L104">        List&lt;DtoResponse&gt; teachersResponse = service.mappingVoToDto(teachers);</span>
+<span class="nc" id="L105">        view.update(teachersResponse);</span>
+<span class="nc" id="L106">    }</span>
+
+    private void addTeacher(HttpServletRequest req, HttpServletResponse resp) throws IOException, IncorrectRequestException {
+
+        TeacherRequest tr;
+<span class="nc" id="L111">        tr = jsonMapper.getDtoFromRequest(TeacherRequest.class, req.getReader());</span>
+<span class="nc" id="L112">        new NameValidator(tr.getFirstName(), tr.getMiddleName(), tr.getSurName()).</span>
+<span class="nc" id="L113">                then(new PhoneValidator(tr.getPhoneNumber())).validate();</span>
+<span class="nc" id="L114">        Teacher teacher = mapper.mapFromRequest(tr);</span>
+<span class="nc" id="L115">        TeacherResponse teacherResponse = mapper.mapToResponse(teacher, Integer.toString(teacher.getExperience()));</span>
+<span class="nc bnc" id="L116" title="All 2 branches missed.">        if (service.create(teacher)) {</span>
+<span class="nc" id="L117">            resp.setStatus(201);</span>
+<span class="nc" id="L118">            view.update(List.of(teacherResponse));</span>
+        }
+
+<span class="nc" id="L121">    }</span>
+
+
+    @Override
+    protected void doPut(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+<span class="nc" id="L126">        logger.trace(DO_PUT_BEGIN);</span>
+<span class="nc" id="L127">        initialization(resp);</span>
+        try {
+<span class="nc" id="L129">            new TeachersValidator(req).validate();</span>
+<span class="nc" id="L130">            String stringId = req.getPathInfo().replaceFirst(PATH_SEPARATOR, EMPTY);</span>
+<span class="nc" id="L131">            TeacherRequest teacherRequest = jsonMapper.getDtoFromRequest(TeacherRequest.class, req.getReader());</span>
+<span class="nc" id="L132">            List&lt;DtoResponse&gt; response = service.update(stringId, teacherRequest);</span>
+<span class="nc" id="L133">            view.update(response);</span>
+<span class="nc" id="L134">            logger.trace(DO_PUT_END);</span>
+<span class="nc" id="L135">        } catch (IncorrectRequestException | NoDataException e) {</span>
+<span class="nc" id="L136">            ErrorResponse response = new ErrorResponse(e.getMessage());</span>
+<span class="nc" id="L137">            logger.warn(WARN_MSG, response.getErrorID(), e.getMessage());</span>
+<span class="nc" id="L138">            view.update(List.of(response));</span>
+<span class="nc" id="L139">        }</span>
+<span class="nc" id="L140">    }</span>
+
+
+    @Override
+    protected void doDelete(HttpServletRequest req, HttpServletResponse resp) {
+<span class="nc" id="L145">        logger.trace(DO_DELETE_BEGIN);</span>
+<span class="nc" id="L146">        initialization(resp);</span>
+        try {
+<span class="nc" id="L148">            new TeachersValidator(req).validate();</span>
+<span class="nc bnc" id="L149" title="All 2 branches missed.">            if (req.getQueryString() == null) {</span>
+<span class="nc" id="L150">                String stringID = req.getPathInfo().replaceFirst(PATH_SEPARATOR, EMPTY);</span>
+<span class="nc" id="L151">                service.delete(stringID);</span>
+<span class="nc" id="L152">                resp.setStatus(204);</span>
+<span class="nc" id="L153">            } else removeFromTeachersSubjects(req);</span>
+<span class="nc" id="L154">            logger.trace(DO_DELETE_END);</span>
+<span class="nc" id="L155">        } catch (IncorrectRequestException | NoDataException e) {</span>
+<span class="nc" id="L156">            ErrorResponse response = new ErrorResponse(e.getMessage());</span>
+<span class="nc" id="L157">            logger.warn(WARN_MSG, response.getErrorID(), e.getMessage());</span>
+<span class="nc" id="L158">            view.update(List.of(response));</span>
+<span class="nc" id="L159">        }</span>
+<span class="nc" id="L160">    }</span>
+
+    private void removeFromTeachersSubjects(HttpServletRequest req) throws IncorrectRequestException, NoDataException {
+<span class="nc" id="L163">        String stringID = req.getPathInfo().replaceFirst(PATH_SEPARATOR, EMPTY);</span>
+<span class="nc" id="L164">        Subject subject = Subject.getSubject(req.getParameterMap().get(SUBJECT_PARAMETER)[0]);</span>
+<span class="nc bnc" id="L165" title="All 2 branches missed.">        if (subject == null) throw new IncorrectRequestException(INCORRECT_REQUEST_ARGS);</span>
+<span class="nc" id="L166">        Teacher teacher = (Teacher) service.getDataById(stringID).get(0);</span>
+<span class="nc bnc" id="L167" title="All 2 branches missed.">        if (teacher == null) throw new NoDataException(NO_DATA_FOUND);</span>
+<span class="nc" id="L168">        boolean deleted = teacher.getSubjects().remove(subject);</span>
+<span class="nc bnc" id="L169" title="All 2 branches missed.">        if (!deleted) throw new NoDataException(NO_DATA_FOUND);</span>
+<span class="nc" id="L170">        List&lt;ModelUnit&gt; units = List.of(teacher);</span>
+<span class="nc" id="L171">        view.update(service.mappingVoToDto(units));</span>
+<span class="nc" id="L172">    }</span>
+
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

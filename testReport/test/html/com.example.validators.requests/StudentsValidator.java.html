@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="ru"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>StudentsValidator.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">University</a> &gt; <a href="index.source.html" class="el_package">com.example.validators.requests</a> &gt; <span class="el_source">StudentsValidator.java</span></div><h1>StudentsValidator.java</h1><pre class="source lang-java linenums">package com.example.validators.requests;
+
+import com.example.exeptions.IncorrectRequestException;
+import com.example.validators.Validators;
+import com.example.validators.parameters.PathValidator;
+import com.example.validators.parameters.QueryValidator;
+import jakarta.servlet.http.HttpServletRequest;
+import lombok.AllArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.time.format.DateTimeParseException;
+
+import static com.example.consts.ControlerConstants.*;
+import static com.example.consts.LoggerConstants.*;
+import static com.example.consts.LoggerConstants.END_VALIDATION_UNSUCCESSFUL;
+import static com.example.consts.ModelConstants.*;
+import static com.example.consts.ModelConstants.INCORRECT_DATE_FORMAT;
+
+<span class="fc" id="L20">@AllArgsConstructor</span>
+public class StudentsValidator extends Validators {
+<span class="fc" id="L22">    private static final Logger logger = LoggerFactory.getLogger(StudentsValidator.class);</span>
+    private HttpServletRequest req;
+
+    @Override
+    protected void validation() throws IncorrectRequestException {
+<span class="fc" id="L27">        logger.trace(START_VALIDATION);</span>
+<span class="fc" id="L28">        String method = req.getMethod();</span>
+<span class="pc bpc" id="L29" title="3 of 4 branches missed.">        switch (method) {</span>
+<span class="fc" id="L30">            case GET -&gt; doGetValidation(req);</span>
+<span class="nc" id="L31">            case POST -&gt; doPostValidation(req);</span>
+<span class="nc" id="L32">            case PUT, DELETE -&gt; doPutDeleteValidation(req);</span>
+<span class="nc" id="L33">            default -&gt; throw new IncorrectRequestException(UNKNOWN_ERROR);</span>
+        }
+<span class="fc" id="L35">        logger.trace(END_VALIDATION_SUCCESSFUL);</span>
+<span class="fc" id="L36">    }</span>
+
+    private void doGetValidation(HttpServletRequest req) throws IncorrectRequestException {
+<span class="fc" id="L39">        String path = req.getPathInfo();</span>
+<span class="fc" id="L40">        String query = req.getQueryString();</span>
+        try {
+<span class="pc bpc" id="L42" title="1 of 4 branches missed.">            if (path != null &amp;&amp; query != null) throw new IncorrectRequestException(INCORRECT_REQUEST_ARGS);</span>
+<span class="fc bfc" id="L43" title="All 2 branches covered.">            else if (path != null) new PathValidator(path).validate();</span>
+<span class="pc bpc" id="L44" title="1 of 2 branches missed.">            else if (query != null) {</span>
+<span class="fc bfc" id="L45" title="All 2 branches covered.">                for (String key : req.getParameterMap().keySet())</span>
+<span class="pc bpc" id="L46" title="1 of 2 branches missed.">                    if (!STUDENT_REQUEST_PARAMETERS.contains(key))</span>
+<span class="nc" id="L47">                        throw new IncorrectRequestException(INCORRECT_REQUEST_ARGS);</span>
+<span class="fc" id="L48">                new QueryValidator(req).validate();</span>
+            }
+<span class="nc" id="L50">        } catch (NumberFormatException e) {</span>
+<span class="nc" id="L51">            logger.trace(END_VALIDATION_UNSUCCESSFUL, e.getMessage());</span>
+<span class="nc" id="L52">            throw new IncorrectRequestException(INCORRECT_NUMBER_FORMAT);</span>
+<span class="nc" id="L53">        } catch (DateTimeParseException e) {</span>
+<span class="nc" id="L54">            logger.trace(END_VALIDATION_UNSUCCESSFUL, e.getMessage());</span>
+<span class="nc" id="L55">            throw new IncorrectRequestException(INCORRECT_DATE_FORMAT);</span>
+<span class="fc" id="L56">        }</span>
+<span class="fc" id="L57">    }</span>
+
+    private void doPostValidation(HttpServletRequest req) throws IncorrectRequestException {
+<span class="pc bpc" id="L60" title="1 of 4 branches missed.">        if (req.getPathInfo() != null || req.getQueryString() != null)</span>
+<span class="fc" id="L61">            throw new IncorrectRequestException(INCORRECT_REQUEST_ARGS);</span>
+<span class="nc" id="L62">    }</span>
+
+    private void doPutDeleteValidation(HttpServletRequest req) throws IncorrectRequestException {
+<span class="pc bpc" id="L65" title="1 of 4 branches missed.">        if (req.getPathInfo() == null || req.getQueryString() != null)</span>
+<span class="fc" id="L66">            throw new IncorrectRequestException(INCORRECT_REQUEST_ARGS);</span>
+        try {
+<span class="nc" id="L68">            new PathValidator(req.getPathInfo()).validate();</span>
+<span class="nc" id="L69">        } catch (NumberFormatException e) {</span>
+<span class="nc" id="L70">            logger.trace(END_VALIDATION_UNSUCCESSFUL, e.getMessage());</span>
+<span class="nc" id="L71">            throw new IncorrectRequestException(INCORRECT_NUMBER_FORMAT);</span>
+<span class="nc" id="L72">        }</span>
+
+<span class="nc" id="L74">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

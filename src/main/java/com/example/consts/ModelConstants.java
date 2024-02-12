@@ -39,4 +39,16 @@ public static final String PARAM_NOT_RECOGNISED = "Parameter '%s' not recognised
 public static final String SCHEDULE_NOT_UNIQUE = "Found schedule not unique. Specify the request";
 public static final String ERROR_JSON_STRING = "Internal error to write JSON string";
 public static final String PARAM_NOT_FOUND = "One of the required parameters was not found";
+public static final String MAX_STUDENT_IN_GROUP = "MAX_STUDENT_IN_GROUP";
+public static final String ERROR_MAX_STUDENT_IN_GROUP = "Error to add. Group has max quantity of students";
+public static final String MIN_STUDENT_IN_GROUP = "MIN_STUDENT_IN_GROUP";
+public static final String ERROR_MIN_STUDENT_IN_GROUP = "Error to remove. Group has min quantity of students";
+public static final String MAX_CLASSES_FOR_GROUP = "MAX_CLASSES_FOR_GROUP";
+public static final String ERROR_MAX_CLASSES_FOR_GROUP = "Error to add. Group has max quantity classes per day";
+public static final String MIN_CLASSES_FOR_GROUP = "MIN_CLASSES_FOR_GROUP";
+public static final String ERROR_MIN_CLASSES_FOR_GROUP = "Error to remove. Group has min quantity classes per day";
+public static final int DEFAULT_MAX_STD_IN_GROUP = 30;
+public static final int DEFAULT_MIN_STD_IN_GROUP = 5;
+public static final int DEFAULT_MAX_CLASSES_FOR_GROUP = 5;
+public static final int DEFAULT_MIN_CLASSES_FOR_GROUP = 0;
 }

@@ -1,0 +1,219 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="ru"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>GroupsServlet.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">University</a> &gt; <a href="index.source.html" class="el_package">com.example.controller.servlets</a> &gt; <span class="el_source">GroupsServlet.java</span></div><h1>GroupsServlet.java</h1><pre class="source lang-java linenums">package com.example.controller.servlets;
+
+import com.example.exeptions.IncorrectRequestException;
+import com.example.exeptions.NoDataException;
+import com.example.mapper.GroupMapper;
+import com.example.mapper.GroupMapperImpl;
+import com.example.mapper.viewmapper.JsonMapper;
+import com.example.mapper.viewmapper.ViewMapper;
+import com.example.model.dto.Request.GroupRequest;
+import com.example.model.dto.Response.DtoResponse;
+import com.example.model.dto.Response.ErrorResponse;
+import com.example.model.dto.Response.GroupResponse;
+import com.example.model.service.GroupService;
+import com.example.model.service.Service;
+import com.example.model.service.StudentService;
+import com.example.model.vo.*;
+import com.example.validators.quantity.GroupQuantityValidator;
+import com.example.validators.requests.GroupsValidator;
+import com.example.view.JsonView;
+import com.example.view.View;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.annotation.WebServlet;
+import jakarta.servlet.http.HttpServlet;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.CopyOnWriteArrayList;
+
+import static com.example.consts.ControlerConstants.*;
+import static com.example.consts.LoggerConstants.*;
+import static com.example.consts.ModelConstants.*;
+
+
+@WebServlet(name = &quot;GroupsServlet&quot;, urlPatterns = &quot;/groups/*&quot;)
+<span class="nc" id="L42">public class GroupsServlet extends HttpServlet {</span>
+<span class="nc" id="L43">    private static final Logger logger = LoggerFactory.getLogger(GroupsServlet.class);</span>
+    private transient View view;
+    private transient Service service;
+    private transient Service studentService;
+    private transient ViewMapper jsonMapper;
+    private transient GroupMapper mapper;
+
+    private void initialization(HttpServletResponse resp) {
+<span class="nc" id="L51">        view = new JsonView(resp);</span>
+<span class="nc" id="L52">        jsonMapper = new JsonMapper();</span>
+<span class="nc" id="L53">        service = new GroupService();</span>
+<span class="nc" id="L54">        studentService = new StudentService();</span>
+<span class="nc" id="L55">        mapper = new GroupMapperImpl();</span>
+<span class="nc" id="L56">    }</span>
+
+    @Override
+    protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+<span class="nc" id="L60">        logger.trace(DO_GET_BEGIN);</span>
+<span class="nc" id="L61">        initialization(resp);</span>
+        try {
+
+<span class="nc" id="L64">            new GroupsValidator(req).validate();</span>
+<span class="nc bnc" id="L65" title="All 2 branches missed.">            if (req.getPathInfo() != null) {</span>
+<span class="nc" id="L66">                String[] paths = req.getPathInfo().replaceFirst(PATH_SEPARATOR, EMPTY).split(PATH_SEPARATOR);</span>
+<span class="nc" id="L67">                List&lt;DtoResponse&gt; responseList = new ArrayList&lt;&gt;();</span>
+<span class="nc bnc" id="L68" title="All 2 branches missed.">                for (String path : paths) responseList.addAll(service.mappingVoToDto(service.getDataById(path)));</span>
+<span class="nc" id="L69">                view.update(responseList);</span>
+<span class="nc" id="L70">                logger.trace(DO_GET_END);</span>
+<span class="nc" id="L71">            } else {</span>
+<span class="nc" id="L72">                List&lt;ModelUnit&gt; units = service.getDataByParameters(req.getParameterMap());</span>
+<span class="nc" id="L73">                List&lt;DtoResponse&gt; responseList = service.mappingVoToDto(units);</span>
+<span class="nc" id="L74">                view.update(responseList);</span>
+<span class="nc" id="L75">                logger.trace(DO_GET_END);</span>
+            }
+<span class="nc" id="L77">        } catch (IncorrectRequestException e) {</span>
+<span class="nc" id="L78">            ErrorResponse response = new ErrorResponse(e.getMessage());</span>
+<span class="nc" id="L79">            logger.warn(WARN_MSG, response.getErrorID(), e.getMessage());</span>
+<span class="nc" id="L80">            view.update(List.of(response));</span>
+<span class="nc" id="L81">        }</span>
+<span class="nc" id="L82">        super.doGet(req, resp);</span>
+<span class="nc" id="L83">    }</span>
+
+
+
+    @Override
+    protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+<span class="nc" id="L89">        logger.trace(DO_POST_BEGIN);</span>
+<span class="nc" id="L90">        initialization(resp);</span>
+        try {
+<span class="nc" id="L92">            new GroupsValidator(req).validate();</span>
+<span class="nc bnc" id="L93" title="All 4 branches missed.">            if (req.getPathInfo() == null &amp;&amp; req.getQueryString() == null) addGroup(req, resp);</span>
+<span class="nc" id="L94">            else addStudentsToGroup(req);</span>
+<span class="nc" id="L95">            logger.trace(DO_POST_END);</span>
+<span class="nc" id="L96">        } catch (IncorrectRequestException | NoDataException e) {</span>
+<span class="nc" id="L97">            ErrorResponse response = new ErrorResponse(e.getMessage());</span>
+<span class="nc" id="L98">            logger.warn(WARN_MSG, response.getErrorID(), e.getMessage());</span>
+<span class="nc" id="L99">            view.update(List.of(response));</span>
+<span class="nc" id="L100">        }</span>
+<span class="nc" id="L101">    }</span>
+
+    private void addStudentsToGroup(HttpServletRequest req) throws IncorrectRequestException, NoDataException {
+<span class="nc" id="L104">        String[] paths = req.getPathInfo().replaceFirst(PATH_SEPARATOR, EMPTY).split(PATH_SEPARATOR);</span>
+<span class="nc" id="L105">        List&lt;ModelUnit&gt; list = service.getDataById(paths[0]);</span>
+<span class="nc bnc" id="L106" title="All 2 branches missed.">        if (list.isEmpty()) throw  new NoDataException(NO_DATA_FOUND);</span>
+<span class="nc" id="L107">        Group group = (Group) list.get(0);</span>
+<span class="nc" id="L108">        new GroupQuantityValidator(req, group).validate();</span>
+<span class="nc bnc" id="L109" title="All 2 branches missed.">        if (paths.length &gt; 1) {</span>
+<span class="nc bnc" id="L110" title="All 2 branches missed.">            for (int i = 1; i &lt; paths.length; i++) {</span>
+<span class="nc" id="L111">                Student student = (Student) studentService.getDataById(paths[i]).get(0);</span>
+<span class="nc bnc" id="L112" title="All 2 branches missed.">                if (student != null) group.addStudent(student);</span>
+            }
+<span class="nc" id="L114">            List&lt;ModelUnit&gt; students = new ArrayList&lt;&gt;(group.getStudents());</span>
+<span class="nc" id="L115">            GroupResponse groupResponse = mapper.mapToResponse(group, studentService.mappingVoToDto(students));</span>
+<span class="nc" id="L116">            view.update(List.of(groupResponse));</span>
+<span class="nc" id="L117">        } else {</span>
+<span class="nc" id="L118">            Map&lt;String, String[]&gt; parameterMap = req.getParameterMap();</span>
+<span class="nc bnc" id="L119" title="All 2 branches missed.">            for (String value : parameterMap.get(RQ_ID)) {</span>
+<span class="nc" id="L120">                Student student = (Student) studentService.getDataById(value).get(0);</span>
+<span class="nc bnc" id="L121" title="All 2 branches missed.">                if (student != null) group.getStudents().add(student);</span>
+            }
+<span class="nc" id="L123">            List&lt;ModelUnit&gt; students = new ArrayList&lt;&gt;(group.getStudents());</span>
+<span class="nc" id="L124">            GroupResponse groupResponse = mapper.mapToResponse(group, studentService.mappingVoToDto(students));</span>
+<span class="nc" id="L125">            view.update(List.of(groupResponse));</span>
+        }
+
+<span class="nc" id="L128">    }</span>
+
+    private void addGroup(HttpServletRequest req, HttpServletResponse resp) throws IOException, IncorrectRequestException {
+<span class="nc" id="L131">        try (BufferedReader reader = req.getReader()) {</span>
+            GroupRequest groupRequest;
+<span class="nc" id="L133">            groupRequest = jsonMapper.getDtoFromRequest(GroupRequest.class, reader);</span>
+<span class="nc" id="L134">            Group group = mapper.mapFromRequest(groupRequest);</span>
+<span class="nc" id="L135">            List&lt;ModelUnit&gt; students = new ArrayList&lt;&gt;(group.getStudents());</span>
+<span class="nc" id="L136">            GroupResponse groupResponse = mapper.mapToResponse(group, studentService.mappingVoToDto(students));</span>
+<span class="nc bnc" id="L137" title="All 2 branches missed.">            if (service.create(group)) {</span>
+<span class="nc" id="L138">                resp.setStatus(201);</span>
+<span class="nc" id="L139">                view.update(List.of(groupResponse));</span>
+            }
+        }
+<span class="nc" id="L142">    }</span>
+
+
+
+    @Override
+    protected void doPut(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+<span class="nc" id="L148">        logger.trace(DO_PUT_BEGIN);</span>
+<span class="nc" id="L149">        initialization(resp);</span>
+        try {
+<span class="nc" id="L151">            new GroupsValidator(req).validate();</span>
+<span class="nc" id="L152">            String stringId = req.getPathInfo().replaceFirst(PATH_SEPARATOR, EMPTY);</span>
+<span class="nc" id="L153">            GroupRequest groupRequest = jsonMapper.getDtoFromRequest(GroupRequest.class, req.getReader());</span>
+<span class="nc" id="L154">            List&lt;DtoResponse&gt; response = service.update(stringId, groupRequest);</span>
+<span class="nc" id="L155">            view.update(response);</span>
+<span class="nc" id="L156">            logger.trace(DO_PUT_END);</span>
+<span class="nc" id="L157">        } catch (IncorrectRequestException | NoDataException e) {</span>
+<span class="nc" id="L158">            ErrorResponse response = new ErrorResponse(e.getMessage());</span>
+<span class="nc" id="L159">            logger.warn(WARN_MSG, response.getErrorID(), e.getMessage());</span>
+<span class="nc" id="L160">            view.update(List.of(response));</span>
+<span class="nc" id="L161">        }</span>
+<span class="nc" id="L162">    }</span>
+
+
+
+    @Override
+    protected void doDelete(HttpServletRequest req, HttpServletResponse resp) {
+<span class="nc" id="L168">        logger.trace(DO_DELETE_BEGIN);</span>
+<span class="nc" id="L169">        initialization(resp);</span>
+        try {
+<span class="nc" id="L171">            new GroupsValidator(req).validate();</span>
+<span class="nc bnc" id="L172" title="All 2 branches missed.">            if (req.getQueryString() == null) {</span>
+<span class="nc" id="L173">                String[] paths = req.getPathInfo().replaceFirst(PATH_SEPARATOR, EMPTY).split(PATH_SEPARATOR);</span>
+<span class="nc bnc" id="L174" title="All 2 branches missed.">                if (paths.length == 1) {</span>
+<span class="nc" id="L175">                    String stringID = paths[0];</span>
+<span class="nc" id="L176">                    service.delete(stringID);</span>
+<span class="nc" id="L177">                    resp.setStatus(204);</span>
+<span class="nc" id="L178">                } else removeStudentsFormGroup(req, resp);</span>
+<span class="nc" id="L179">            } else removeStudentsFormGroup(req, resp);</span>
+<span class="nc" id="L180">            logger.trace(DO_DELETE_END);</span>
+<span class="nc" id="L181">        } catch (IncorrectRequestException | NoDataException e) {</span>
+<span class="nc" id="L182">            ErrorResponse response = new ErrorResponse(e.getMessage());</span>
+<span class="nc" id="L183">            logger.warn(WARN_MSG, response.getErrorID(), e.getMessage());</span>
+<span class="nc" id="L184">            view.update(List.of(response));</span>
+<span class="nc" id="L185">        }</span>
+<span class="nc" id="L186">    }</span>
+
+    private void removeStudentsFormGroup(HttpServletRequest req, HttpServletResponse resp) throws IncorrectRequestException, NoDataException {
+<span class="nc" id="L189">        String[] paths = req.getPathInfo().replaceFirst(PATH_SEPARATOR, EMPTY).split(PATH_SEPARATOR);</span>
+<span class="nc" id="L190">        List&lt;ModelUnit&gt; list = service.getDataById(paths[0]);</span>
+<span class="nc bnc" id="L191" title="All 2 branches missed.">        if (list.isEmpty()) throw new NoDataException(NO_DATA_FOUND);</span>
+<span class="nc" id="L192">        Group group = (Group) list.get(0);</span>
+<span class="nc" id="L193">        new GroupQuantityValidator(req,group).validate();</span>
+<span class="nc" id="L194">        List&lt;Student&gt; studentList = new ArrayList&lt;&gt;();</span>
+<span class="nc bnc" id="L195" title="All 2 branches missed.">        if (paths.length != 1) {</span>
+<span class="nc bnc" id="L196" title="All 2 branches missed.">            for (int i = 1; i &lt; paths.length; i++) {</span>
+<span class="nc" id="L197">                Student student = (Student) studentService.getDataById(paths[i]).get(0);</span>
+<span class="nc bnc" id="L198" title="All 2 branches missed.">                if (!group.getStudents().contains(student)) throw new IncorrectRequestException(INCORRECT_REQUEST_ARGS);</span>
+<span class="nc" id="L199">                studentList.add(student);</span>
+            }
+        } else {
+<span class="nc bnc" id="L202" title="All 2 branches missed.">            for (String id : req.getParameterMap().get(RQ_ID)) {</span>
+<span class="nc" id="L203">                Student student = (Student) studentService.getDataById(id);</span>
+<span class="nc bnc" id="L204" title="All 2 branches missed.">                if (!group.getStudents().contains(student)) throw new IncorrectRequestException(INCORRECT_REQUEST_ARGS);</span>
+<span class="nc" id="L205">                studentList.add(student);</span>
+            }
+        }
+<span class="nc" id="L208">        CopyOnWriteArrayList&lt;Student&gt; students = group.getStudents();</span>
+<span class="nc bnc" id="L209" title="All 2 branches missed.">        for (Student student : studentList) {</span>
+<span class="nc" id="L210">            new GroupQuantityValidator(req,group).validate();</span>
+<span class="nc" id="L211">            students.remove(student);</span>
+<span class="nc" id="L212">        }</span>
+<span class="nc" id="L213">        resp.setStatus(200);</span>
+<span class="nc" id="L214">        view.update(service.mappingVoToDto(List.of(group)));</span>
+<span class="nc" id="L215">    }</span>
+
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

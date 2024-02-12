@@ -51,5 +51,5 @@ public class LoggerConstants {
     public static final String START_VALIDATION = "Start validation method";
     public static final String END_VALIDATION_SUCCESSFUL = "End validation method successful" ;
     public static final String END_VALIDATION_UNSUCCESSFUL = "End validation method with problem: {}" ;
-
+    public static final String ERROR_PROPERTY = "I/O error to read property file" ;
 }

@@ -39,13 +39,13 @@ public class QueryValidator extends Validators {
                     case RQ_END_DATE_TIME -> end = LocalDateTime.parse(value, formatter);
                     case RQ_SUBJECT -> subjectValidation(parameterMap);
                     case RQ_STUDENT_ID, RQ_GROUP_ID, RQ_TEACHER_ID, RQ_EXPERIENCE, RQ_ID ->
-                            idValidation(parameterMap.get(value));
+                            idValidation(parameterMap.get(key));
                     case RQ_BIRTHDAY -> birthdayValidation(value);
-                    case RQ_FIRST_NAME -> new NameValidator(value, null, null).validate();
-                    case RQ_MIDDLE_NAME -> new NameValidator(null, value, null).validate();
-                    case RQ_SURNAME -> new NameValidator(null, null, value).validate();
+                    case RQ_FIRST_NAME, RQ_MIDDLE_NAME, RQ_SURNAME -> {
+                        if (value == null) throw new IncorrectRequestException(INCORRECT_REQUEST_ARGS);
+                    }
                     case RQ_PHONE_NUMBER -> new PhoneValidator(value);
-                    case RQ_NUMBER, RQ_GROUP_NUMBER -> groupNumberValidation(parameterMap);
+                    case RQ_NUMBER, RQ_GROUP_NUMBER -> groupNumberValidation(parameterMap.get(key));
                     default -> throw new IncorrectRequestException(INCORRECT_REQUEST_ARGS);
                 }
             }
@@ -61,8 +61,7 @@ public class QueryValidator extends Validators {
         }
     }
 
-    private void groupNumberValidation(Map<String, String[]> parameterMap) throws IncorrectRequestException {
-        String[] strings = parameterMap.get(RQ_GROUP_NUMBER);
+    private void groupNumberValidation(String[] strings) throws IncorrectRequestException {
         if (strings == null || strings.length != 1) throw new IncorrectRequestException(INCORRECT_REQUEST_ARGS);
     }
 

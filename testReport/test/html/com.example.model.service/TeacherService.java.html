@@ -1,0 +1,145 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="ru"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>TeacherService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">University</a> &gt; <a href="index.source.html" class="el_package">com.example.model.service</a> &gt; <span class="el_source">TeacherService.java</span></div><h1>TeacherService.java</h1><pre class="source lang-java linenums">package com.example.model.service;
+
+import com.example.exeptions.IncorrectRequestException;
+import com.example.exeptions.NoDataException;
+import com.example.mapper.TeacherMapper;
+import com.example.mapper.TeacherMapperImpl;
+import com.example.model.dto.Request.DtoRequest;
+import com.example.model.dto.Request.TeacherRequest;
+import com.example.model.dto.Response.DtoResponse;
+import com.example.model.vo.ModelUnit;
+import com.example.model.vo.Teacher;
+import com.example.repository.RepositoryFacade;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.time.LocalDate;
+import java.time.format.DateTimeParseException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.function.Predicate;
+
+import static com.example.consts.LoggerConstants.*;
+import static com.example.consts.ModelConstants.*;
+
+<span class="nc" id="L26">public class TeacherService implements Service {</span>
+<span class="nc" id="L27">    private final static Logger logger = LoggerFactory.getLogger(StudentService.class);</span>
+<span class="nc" id="L28">    private final RepositoryFacade repo = new RepositoryFacade();</span>
+<span class="nc" id="L29">    private final TeacherMapper mapper = new TeacherMapperImpl();</span>
+
+    @Override
+    public List&lt;ModelUnit&gt; getDataById(String idString) throws IncorrectRequestException {
+<span class="nc" id="L33">        logger.trace(SERVICE_GETDATABYID_BEGIN, idString);</span>
+        int id;
+        try {
+<span class="nc" id="L36">            id = Integer.parseInt(idString);</span>
+<span class="nc" id="L37">        } catch (NumberFormatException e) {</span>
+<span class="nc" id="L38">            throw new IncorrectRequestException(INCORRECT_NUMBER_FORMAT);</span>
+<span class="nc" id="L39">        }</span>
+<span class="nc" id="L40">        Teacher teacher = repo.getTeacher(id);</span>
+<span class="nc bnc" id="L41" title="All 2 branches missed.">        logger.trace(SERVICE_GETDATABYID_END, teacher != null ? teacher.getId() : null);</span>
+<span class="nc bnc" id="L42" title="All 2 branches missed.">        if (teacher != null) return List.of(teacher);</span>
+<span class="nc" id="L43">        else return new ArrayList&lt;&gt;();</span>
+    }
+
+    @Override
+    public List&lt;ModelUnit&gt; getDataByParameters(Map&lt;String, String[]&gt; parameterMap) throws IncorrectRequestException {
+<span class="nc" id="L48">        logger.trace(SERVICE_GETDATABYPARAMS_BEGIN, parameterMap.keySet());</span>
+<span class="nc" id="L49">        List&lt;Predicate&lt;Teacher&gt;&gt; predicates = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L50">        List&lt;Teacher&gt; teachers = null;</span>
+<span class="nc bnc" id="L51" title="All 2 branches missed.">        for (String key : parameterMap.keySet()) {</span>
+<span class="nc" id="L52">            String value = parameterMap.get(key)[0];</span>
+<span class="nc bnc" id="L53" title="All 8 branches missed.">            switch (key) {</span>
+<span class="nc" id="L54">                case RQ_FIRST_NAME -&gt; predicates.add(s -&gt; s.hasFirstName(value));</span>
+<span class="nc" id="L55">                case RQ_MIDDLE_NAME -&gt; predicates.add(s -&gt; s.hasMiddleName(value));</span>
+<span class="nc" id="L56">                case RQ_SURNAME -&gt; predicates.add(s -&gt; s.hasSurName(value));</span>
+<span class="nc" id="L57">                case RQ_PHONE_NUMBER -&gt; predicates.add(s -&gt; s.hasPhoneNumber(value));</span>
+<span class="nc" id="L58">                case RQ_BIRTHDAY -&gt; addBirthDayPredicate(predicates, value);</span>
+<span class="nc" id="L59">                case RQ_ID -&gt; teachers = getTeachersByParameters(parameterMap, key);</span>
+<span class="nc bnc" id="L60" title="All 2 branches missed.">                case RQ_EXPERIENCE -&gt; predicates.add(s -&gt; s.getExperience() == Integer.parseInt(value));</span>
+<span class="nc" id="L61">                default -&gt; throw new IncorrectRequestException(String.format(PARAM_NOT_RECOGNISED, key));</span>
+            }
+<span class="nc" id="L63">        }</span>
+<span class="nc bnc" id="L64" title="All 2 branches missed.">        if (teachers == null) teachers = repo.getTeachers(predicates);</span>
+<span class="nc" id="L65">        logger.trace(SERVICE_GETDATABYPARAMS_END, teachers.stream().map(Teacher::getId).toList());</span>
+<span class="nc" id="L66">        return new ArrayList&lt;&gt;(teachers);</span>
+    }
+
+    @Override
+    public List&lt;DtoResponse&gt; mappingVoToDto(List&lt;ModelUnit&gt; modelUnitList) {
+<span class="nc" id="L71">        logger.trace(SERVICE_MAP_DTO_BEGIN, modelUnitList.size());</span>
+<span class="nc" id="L72">        List&lt;DtoResponse&gt; list = new ArrayList&lt;&gt;();</span>
+<span class="nc bnc" id="L73" title="All 2 branches missed.">        for (ModelUnit modelUnit : modelUnitList) {</span>
+<span class="nc" id="L74">            Teacher teacher = (Teacher) modelUnit;</span>
+<span class="nc" id="L75">            list.add(mapper.mapToResponse(teacher, Integer.toString(teacher.getExperience())));</span>
+<span class="nc" id="L76">        }</span>
+<span class="nc" id="L77">        logger.trace(SERVICE_MAP_DTO_END, list.size());</span>
+<span class="nc" id="L78">        return list;</span>
+
+    }
+
+    @Override
+    public boolean create(ModelUnit modelUnit) {
+<span class="nc" id="L84">        logger.trace(SERVICE_CREATE, ((Teacher) modelUnit).getId());</span>
+<span class="nc" id="L85">        return repo.addTeacher((Teacher) modelUnit);</span>
+    }
+
+    @Override
+    public List&lt;DtoResponse&gt; update(String path, DtoRequest dtoRequest) throws IncorrectRequestException, NoDataException {
+<span class="nc" id="L90">        logger.trace(SERVICE_UPDATE_BEGIN, path, dtoRequest);</span>
+<span class="nc" id="L91">        TeacherRequest teacherRequest = (TeacherRequest) dtoRequest;</span>
+<span class="nc" id="L92">        List&lt;ModelUnit&gt; teacherList = getDataById(path);</span>
+<span class="nc bnc" id="L93" title="All 2 branches missed.">        if (teacherList.isEmpty()) throw new NoDataException(DATA_NOT_FOUND);</span>
+<span class="nc" id="L94">        Teacher teacher = getTeacher(teacherList, teacherRequest);</span>
+<span class="nc" id="L95">        DtoResponse dtoUpdated = mapper.mapToResponse(teacher, Integer.toString(teacher.getExperience()));</span>
+<span class="nc" id="L96">        List&lt;DtoResponse&gt; result = List.of(dtoUpdated);</span>
+<span class="nc" id="L97">        logger.trace(SERVICE_UPDATE_END);</span>
+<span class="nc" id="L98">        return result;</span>
+    }
+
+    private Teacher getTeacher(List&lt;ModelUnit&gt; teacherList, TeacherRequest teacherRequest) {
+<span class="nc" id="L102">        Teacher teacher = (Teacher) teacherList.get(0);</span>
+<span class="nc bnc" id="L103" title="All 2 branches missed.">        if (teacherRequest.getFirstName() != null) teacher.setFirstName(teacherRequest.getFirstName());</span>
+<span class="nc bnc" id="L104" title="All 2 branches missed.">        if (teacherRequest.getMiddleName() != null) teacher.setMiddleName(teacherRequest.getMiddleName());</span>
+<span class="nc bnc" id="L105" title="All 2 branches missed.">        if (teacherRequest.getSurName() != null) teacher.setSurName(teacherRequest.getSurName());</span>
+<span class="nc bnc" id="L106" title="All 2 branches missed.">        if (teacherRequest.getBirthDay() != null) teacher.setBirthDay(teacherRequest.getBirthDay());</span>
+<span class="nc bnc" id="L107" title="All 2 branches missed.">        if (teacherRequest.getExperienceBegin() != null)</span>
+<span class="nc" id="L108">            teacher.setExperienceBegin(teacherRequest.getExperienceBegin());</span>
+<span class="nc bnc" id="L109" title="All 2 branches missed.">        if (teacherRequest.getPhoneNumber() != null) teacher.setPhoneNumber(teacherRequest.getPhoneNumber());</span>
+<span class="nc" id="L110">        return teacher;</span>
+    }
+
+    @Override
+    public void delete(String path) throws IncorrectRequestException, NoDataException {
+<span class="nc" id="L115">        logger.trace(SERVICE_DELETE_BEGIN, path);</span>
+        try {
+<span class="nc" id="L117">            boolean deleteSuccessful = repo.removeTeacher(Integer.parseInt(path));</span>
+<span class="nc bnc" id="L118" title="All 2 branches missed.">            if (!deleteSuccessful) throw new NoDataException(DELETE_NOT_SUCCESSFULLY);</span>
+<span class="nc" id="L119">            logger.trace(SERVICE_DELETE_END, true);</span>
+<span class="nc" id="L120">        } catch (NumberFormatException e) {</span>
+<span class="nc" id="L121">            throw new IncorrectRequestException(INCORRECT_NUMBER_FORMAT);</span>
+<span class="nc" id="L122">        }</span>
+<span class="nc" id="L123">    }</span>
+
+    private void addBirthDayPredicate(List&lt;Predicate&lt;Teacher&gt;&gt; predicates, String value) throws IncorrectRequestException {
+        try {
+<span class="nc" id="L127">            predicates.add(s -&gt; s.hasBirthDay(LocalDate.parse(value)));</span>
+<span class="nc" id="L128">        } catch (DateTimeParseException e) {</span>
+<span class="nc" id="L129">            throw new IncorrectRequestException(INCORRECT_DATE_FORMAT);</span>
+<span class="nc" id="L130">        }</span>
+<span class="nc" id="L131">    }</span>
+
+    private List&lt;Teacher&gt; getTeachersByParameters(Map&lt;String, String[]&gt; parameterMap, String key) throws IncorrectRequestException {
+<span class="nc" id="L134">        List&lt;Teacher&gt; teachers = new ArrayList&lt;&gt;();</span>
+        Teacher teacher;
+        try {
+<span class="nc" id="L137">            teacher = repo.getTeacher(Integer.parseInt(parameterMap.get(key)[0]));</span>
+<span class="nc bnc" id="L138" title="All 2 branches missed.">            if (teacher != null) teachers.add(teacher);</span>
+<span class="nc" id="L139">        } catch (NumberFormatException e) {</span>
+<span class="nc" id="L140">            throw new IncorrectRequestException(INCORRECT_NUMBER_FORMAT);</span>
+<span class="nc" id="L141">        }</span>
+<span class="nc" id="L142">        return teachers;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

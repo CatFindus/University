@@ -46,7 +46,7 @@ public class StudentsValidator extends Validators {
                     if (!STUDENT_REQUEST_PARAMETERS.contains(key))
                         throw new IncorrectRequestException(INCORRECT_REQUEST_ARGS);
                 new QueryValidator(req).validate();
-            } else throw new IncorrectRequestException(INCORRECT_REQUEST_ARGS);
+            }
         } catch (NumberFormatException e) {
             logger.trace(END_VALIDATION_UNSUCCESSFUL, e.getMessage());
             throw new IncorrectRequestException(INCORRECT_NUMBER_FORMAT);

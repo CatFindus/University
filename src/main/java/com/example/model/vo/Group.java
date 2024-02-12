@@ -16,9 +16,13 @@ import static com.example.consts.ModelConstants.*;
 
 @Data
 public class Group implements ModelUnit {
+    @Getter(AccessLevel.NONE)
+    @Setter(AccessLevel.NONE)
     private static AtomicInteger idCount;
-    private final Logger logger = LoggerFactory.getLogger(Group.class);
-    private static Properties properties = new Properties();
+    @Getter(AccessLevel.NONE)
+    private static final Logger logger = LoggerFactory.getLogger(Group.class);
+    @Getter(AccessLevel.NONE)
+    private static final Properties properties = new Properties();
 
     static {
         try (InputStream is = Objects.requireNonNull(Student.class.getClassLoader().getResource(MODEL_PROPERTY)).openStream()) {
@@ -65,5 +69,9 @@ public class Group implements ModelUnit {
         boolean added = students.addIfAbsent(student);
         logger.trace(ADDING_TO_OBJECT, added ? SUCCESS : UNSUCCESSFUL);
         return added;
+    }
+
+    public int getStudentsQuantity() {
+        return students.size();
     }
 }

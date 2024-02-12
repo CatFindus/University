@@ -36,11 +36,14 @@ public class SchedulesValidator extends Validators {
     }
 
     private void doGetValidation(HttpServletRequest req) throws IncorrectRequestException {
+        if (req.getQueryString() == null) throw new IncorrectRequestException(INCORRECT_REQUEST_ARGS);
         Map<String, String[]> parameterMap = req.getParameterMap();
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern(DATE_TIME_PARAM_PATTERN);
         if (req.getPathInfo() != null || parameterMap.size() < 2)
             throw new IncorrectRequestException(INCORRECT_REQUEST_ARGS);
         try {
+            if (parameterMap.get(RQ_BEGIN_DATE_TIME) == null || parameterMap.get(RQ_END_DATE_TIME) == null)
+                throw new IncorrectRequestException(INCORRECT_REQUEST_ARGS);
             LocalDateTime begin = LocalDateTime.parse(parameterMap.get(RQ_BEGIN_DATE_TIME)[0], formatter);
             LocalDateTime end = LocalDateTime.parse(parameterMap.get(RQ_END_DATE_TIME)[0], formatter);
             if (begin.isAfter(end))

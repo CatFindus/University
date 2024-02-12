@@ -20,7 +20,8 @@ public class NameValidator extends Validators {
     @Override
     protected void validation() throws IncorrectRequestException {
         logger.trace(START_VALIDATION);
-        Pattern pattern = Pattern.compile(NAME_REGEXP);
+
+        Pattern pattern = Pattern.compile(NAME_REGEXP, Pattern.UNICODE_CHARACTER_CLASS);
         Matcher matcher;
         if(firstName!=null) {
             matcher=pattern.matcher(firstName);

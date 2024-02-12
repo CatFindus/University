@@ -4,6 +4,7 @@ import com.example.model.vo.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.function.Predicate;
@@ -153,5 +154,10 @@ public class RepositoryFacade {
         Schedule schedule = schedulesRepository.getSheduleByUnit(unit);
         logger.trace(REPO_GET_SCHEDULE_BY_UNIT, schedule.getDate(), unit.getBegin());
         return schedule;
+    }
+
+    public Schedule getSchedule(LocalDate date) {
+        return schedulesRepository.getSchedule(date);
+
     }
 }

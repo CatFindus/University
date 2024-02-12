@@ -1,8 +1,6 @@
 package com.example.controller.servlets;
 
-import com.example.model.vo.Group;
-import com.example.model.vo.Student;
-import com.example.model.vo.Teacher;
+import com.example.model.vo.*;
 import com.example.repository.RepositoryFacade;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
@@ -10,6 +8,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 @WebServlet(name = "InitServlet", urlPatterns = "/init/*")
 public class InitServlet extends HttpServlet {
@@ -34,5 +33,9 @@ public class InitServlet extends HttpServlet {
             repo.addTeacher(new Teacher(tfn, tmn, tsn, bd, exp, phone));
             repo.addGroup(new Group(String.format("Best-Group %d", i)));
         }
+        repo.addScheduleUnit(new ScheduleUnit(
+                LocalDateTime.of(2024,2,6,11,30),
+                LocalDateTime.of(2024, 2, 6, 13,30),
+                repo.getTeacher(2),repo.getGroup(2), Subject.CULTURE_STUDIES));
     }
 }

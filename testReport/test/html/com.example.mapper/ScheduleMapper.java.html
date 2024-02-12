@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="ru"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ScheduleMapper.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">University</a> &gt; <a href="index.source.html" class="el_package">com.example.mapper</a> &gt; <span class="el_source">ScheduleMapper.java</span></div><h1>ScheduleMapper.java</h1><pre class="source lang-java linenums">package com.example.mapper;
+
+import com.example.consts.ModelConstants;
+import com.example.exeptions.IncorrectRequestException;
+import com.example.model.dto.Request.ScheduleRequest;
+import com.example.model.dto.Request.ScheduleUnitRequest;
+import com.example.model.dto.Response.GroupScheduleResponce;
+import com.example.model.dto.Response.ScheduleResponse;
+import com.example.model.dto.Response.ScheduleUnitResponse;
+import com.example.model.dto.Response.TeacherScheduleResponse;
+import com.example.model.vo.*;
+import com.example.repository.RepositoryFacade;
+import org.mapstruct.Mapper;
+
+@Mapper
+<span class="nc" id="L16">public abstract class ScheduleMapper {</span>
+<span class="nc" id="L17">    private final RepositoryFacade repo = new RepositoryFacade();</span>
+
+    public abstract GroupScheduleResponce mapGroupToDto(Group group);
+
+    public abstract TeacherScheduleResponse mapTeacherToDto(Teacher teacher);
+
+    public abstract ScheduleUnitResponse mapScheduleUnitToDto(ScheduleUnit unit);
+
+    public abstract ScheduleResponse mapScheduleToDto(Schedule schedule);
+    @SuppressWarnings(&quot;unused&quot;)
+    public abstract Schedule mapDtoToSchedule(ScheduleRequest request);
+
+    public ScheduleUnit mapDtoToScheduleUnit(ScheduleUnitRequest request) throws IncorrectRequestException {
+<span class="nc bnc" id="L30" title="All 4 branches missed.">        if (request.getGroupId() == null &amp;&amp; request.getStudentId() == null) throw new IncorrectRequestException(ModelConstants.PARAM_NOT_FOUND);</span>
+<span class="nc" id="L31">        return ScheduleUnit.builder().</span>
+<span class="nc" id="L32">                begin(request.getBegin()).</span>
+<span class="nc" id="L33">                end(request.getEnd()).</span>
+<span class="nc" id="L34">                subject(Subject.getSubject(request.getSubject())).</span>
+<span class="nc" id="L35">                teacher(repo.getTeacher(request.getTeacherId())).</span>
+<span class="nc bnc" id="L36" title="All 2 branches missed.">                group(request.getGroupId() != null ?</span>
+<span class="nc" id="L37">                        repo.getGroup(request.getGroupId()) :</span>
+<span class="nc" id="L38">                        repo.getGroup(repo.getGroupIdByStudent(repo.getStudent(request.getStudentId()))))</span>
+<span class="nc" id="L39">                .build();</span>
+
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

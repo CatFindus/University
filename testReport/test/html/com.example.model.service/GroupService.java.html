@@ -1,0 +1,173 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="ru"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>GroupService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">University</a> &gt; <a href="index.source.html" class="el_package">com.example.model.service</a> &gt; <span class="el_source">GroupService.java</span></div><h1>GroupService.java</h1><pre class="source lang-java linenums">package com.example.model.service;
+
+import com.example.exeptions.IncorrectRequestException;
+import com.example.exeptions.NoDataException;
+import com.example.mapper.GroupMapper;
+import com.example.mapper.GroupMapperImpl;
+import com.example.model.dto.Request.DtoRequest;
+import com.example.model.dto.Request.GroupRequest;
+import com.example.model.dto.Response.DtoResponse;
+import com.example.model.vo.Group;
+import com.example.model.vo.ModelUnit;
+import com.example.model.vo.Student;
+import com.example.repository.RepositoryFacade;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.function.Predicate;
+import java.util.stream.Stream;
+
+import static com.example.consts.LoggerConstants.*;
+import static com.example.consts.ModelConstants.*;
+
+<span class="nc" id="L26">public class GroupService implements Service {</span>
+<span class="nc" id="L27">    private final static Logger logger = LoggerFactory.getLogger(GroupService.class);</span>
+<span class="nc" id="L28">    private final RepositoryFacade repo = new RepositoryFacade();</span>
+<span class="nc" id="L29">    private final GroupMapper mapper = new GroupMapperImpl();</span>
+<span class="nc" id="L30">    private final Service service = new StudentService();</span>
+
+    @Override
+    public List&lt;ModelUnit&gt; getDataById(String idString) throws IncorrectRequestException {
+<span class="nc" id="L34">        logger.trace(SERVICE_GETDATABYID_BEGIN, idString);</span>
+        int id;
+        try {
+<span class="nc" id="L37">            id = Integer.parseInt(idString);</span>
+<span class="nc" id="L38">        } catch (NumberFormatException e) {</span>
+<span class="nc" id="L39">            throw new IncorrectRequestException(INCORRECT_NUMBER_FORMAT);</span>
+<span class="nc" id="L40">        }</span>
+<span class="nc" id="L41">        Group result = repo.getGroup(id);</span>
+<span class="nc bnc" id="L42" title="All 2 branches missed.">        logger.trace(SERVICE_GETDATABYID_END, result != null ? result.getId() : null);</span>
+<span class="nc bnc" id="L43" title="All 2 branches missed.">        if (result != null) return List.of(result);</span>
+<span class="nc" id="L44">        else return new ArrayList&lt;&gt;();</span>
+    }
+
+    @Override
+    public List&lt;ModelUnit&gt; getDataByParameters(Map&lt;String, String[]&gt; parameterMap) throws IncorrectRequestException {
+<span class="nc" id="L49">        logger.trace(SERVICE_GETDATABYPARAMS_BEGIN, parameterMap.keySet());</span>
+<span class="nc" id="L50">        List&lt;Predicate&lt;Group&gt;&gt; predicates = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L51">        List&lt;Group&gt; groups = null;</span>
+<span class="nc bnc" id="L52" title="All 2 branches missed.">        for (String key : parameterMap.keySet()) {</span>
+<span class="nc" id="L53">            String value = parameterMap.get(key)[0];</span>
+<span class="nc bnc" id="L54" title="All 3 branches missed.">            switch (key) {</span>
+<span class="nc" id="L55">                case RQ_NUMBER -&gt; predicates.add(gr -&gt; gr.getNumber().equalsIgnoreCase(value));</span>
+                case RQ_ID -&gt; {
+                    try {
+<span class="nc" id="L58">                        groups = List.of(repo.getGroup(Integer.parseInt(value)));</span>
+<span class="nc" id="L59">                    } catch (NumberFormatException e) {</span>
+<span class="nc" id="L60">                        throw new IncorrectRequestException(INCORRECT_NUMBER_FORMAT);</span>
+<span class="nc" id="L61">                    }</span>
+                }
+<span class="nc" id="L63">                default -&gt; throw new IncorrectRequestException(String.format(PARAM_NOT_RECOGNISED, key));</span>
+            }
+<span class="nc" id="L65">        }</span>
+<span class="nc bnc" id="L66" title="All 2 branches missed.">        if (groups == null) groups = repo.getGroups(predicates);</span>
+<span class="nc" id="L67">        else groups = filterGroupListByPredicates(groups, predicates);</span>
+<span class="nc" id="L68">        logger.trace(SERVICE_GETDATABYPARAMS_END, groups.stream().map(Group::getId).toList());</span>
+<span class="nc" id="L69">        return new ArrayList&lt;&gt;(groups);</span>
+    }
+
+    private List&lt;Group&gt; filterGroupListByPredicates(List&lt;Group&gt; groups, List&lt;Predicate&lt;Group&gt;&gt; predicates) {
+<span class="nc" id="L73">        Stream&lt;Group&gt; stream = groups.stream();</span>
+<span class="nc bnc" id="L74" title="All 2 branches missed.">        for (Predicate&lt;Group&gt; predicate : predicates) stream = stream.filter(predicate);</span>
+<span class="nc" id="L75">        return stream.toList();</span>
+    }
+
+    @Override
+    public List&lt;DtoResponse&gt; mappingVoToDto(List&lt;ModelUnit&gt; modelUnitList) {
+<span class="nc" id="L80">        logger.trace(SERVICE_MAP_DTO_BEGIN, modelUnitList.size());</span>
+<span class="nc" id="L81">        List&lt;DtoResponse&gt; list = new ArrayList&lt;&gt;();</span>
+<span class="nc bnc" id="L82" title="All 2 branches missed.">        for (ModelUnit unit : modelUnitList) {</span>
+<span class="nc" id="L83">            Group group = (Group) unit;</span>
+<span class="nc" id="L84">            List&lt;DtoResponse&gt; studentResponses = new ArrayList&lt;&gt;(service.mappingVoToDto(new ArrayList&lt;&gt;(group.getStudents())));</span>
+<span class="nc" id="L85">            list.add(mapper.mapToResponse(group, studentResponses));</span>
+<span class="nc" id="L86">        }</span>
+<span class="nc" id="L87">        logger.trace(SERVICE_MAP_DTO_END, list.size());</span>
+<span class="nc" id="L88">        return list;</span>
+    }
+
+    @Override
+    public boolean create(ModelUnit modelUnit) {
+<span class="nc" id="L93">        logger.trace(SERVICE_CREATE, ((Group) modelUnit).getId());</span>
+<span class="nc" id="L94">        return repo.addGroup((Group) modelUnit);</span>
+    }
+
+    @Override
+    public List&lt;DtoResponse&gt; update(String path, DtoRequest dtoRequest) throws IncorrectRequestException, NoDataException {
+<span class="nc" id="L99">        logger.trace(SERVICE_UPDATE_BEGIN, path, dtoRequest);</span>
+<span class="nc bnc" id="L100" title="All 2 branches missed.">        if (path.isEmpty()) throw new IncorrectRequestException();</span>
+<span class="nc bnc" id="L101" title="All 2 branches missed.">        if (path.contains(PATH_SEPARATOR)) {</span>
+<span class="nc" id="L102">            String[] strings = path.split(PATH_SEPARATOR);</span>
+<span class="nc bnc" id="L103" title="All 2 branches missed.">            if (strings.length == 1) return updateGroup(strings[0], dtoRequest);</span>
+            else {
+                try {
+<span class="nc" id="L106">                    Integer groupId = Integer.parseInt(strings[0]);</span>
+<span class="nc bnc" id="L107" title="All 2 branches missed.">                    for (int i = 1; i &lt; strings.length; i++) {</span>
+<span class="nc" id="L108">                        int studentId = Integer.parseInt(strings[i]);</span>
+<span class="nc" id="L109">                        Student student = repo.getStudent(studentId);</span>
+<span class="nc" id="L110">                        repo.addStudentToGroup(student, groupId);</span>
+                    }
+<span class="nc" id="L112">                    Group group = repo.getGroup(groupId);</span>
+<span class="nc bnc" id="L113" title="All 2 branches missed.">                    if (group==null) throw new NoDataException(DATA_NOT_FOUND);</span>
+<span class="nc" id="L114">                    List&lt;ModelUnit&gt; students = new ArrayList&lt;&gt;(group.getStudents());</span>
+<span class="nc" id="L115">                    List&lt;DtoResponse&gt; studentResponses = service.mappingVoToDto(students);</span>
+<span class="nc" id="L116">                    return List.of(mapper.mapToResponse(group, studentResponses));</span>
+<span class="nc" id="L117">                } catch (NumberFormatException e) {</span>
+<span class="nc" id="L118">                    throw new IncorrectRequestException(INCORRECT_NUMBER_FORMAT);</span>
+                }
+            }
+        } else {
+<span class="nc" id="L122">            return updateGroup(path, dtoRequest);</span>
+        }
+    }
+
+    private List&lt;DtoResponse&gt; updateGroup(String id, DtoRequest dtoRequest) throws IncorrectRequestException {
+        try {
+<span class="nc" id="L128">            int intId = Integer.parseInt(id);</span>
+<span class="nc" id="L129">            Group group = repo.getGroup(intId);</span>
+<span class="nc" id="L130">            GroupRequest groupRequest = (GroupRequest) dtoRequest;</span>
+<span class="nc bnc" id="L131" title="All 2 branches missed.">            if (groupRequest.getNumber() != null) group.setNumber(groupRequest.getNumber());</span>
+<span class="nc" id="L132">            List&lt;ModelUnit&gt; students = new ArrayList&lt;&gt;(group.getStudents());</span>
+<span class="nc" id="L133">            List&lt;DtoResponse&gt; studentResponses = new ArrayList&lt;&gt;(service.mappingVoToDto(students));</span>
+<span class="nc" id="L134">            logger.trace(SERVICE_UPDATE_END);</span>
+<span class="nc" id="L135">            return List.of(mapper.mapToResponse(group, studentResponses));</span>
+<span class="nc" id="L136">        } catch (NumberFormatException e) {</span>
+<span class="nc" id="L137">            throw new IncorrectRequestException(INCORRECT_NUMBER_FORMAT);</span>
+        }
+    }
+
+    @Override
+    public void delete(String path) throws IncorrectRequestException, NoDataException {
+<span class="nc" id="L143">        logger.trace(SERVICE_DELETE_BEGIN, path);</span>
+<span class="nc bnc" id="L144" title="All 2 branches missed.">        if (path.isEmpty()) throw new IncorrectRequestException(INCORRECT_PATH_FORMAT);</span>
+<span class="nc bnc" id="L145" title="All 2 branches missed.">        if (path.contains(PATH_SEPARATOR)) {</span>
+<span class="nc" id="L146">            String[] strings = path.split(PATH_SEPARATOR);</span>
+<span class="nc bnc" id="L147" title="All 2 branches missed.">            if (strings.length == 1) deleteGroup(strings[0]);</span>
+            try {
+<span class="nc bnc" id="L149" title="All 2 branches missed.">                for (int i = 1; i &lt; strings.length; i++) {</span>
+<span class="nc" id="L150">                    int studentId = Integer.parseInt(strings[i]);</span>
+<span class="nc" id="L151">                    Integer groupId = Integer.parseInt(strings[0]);</span>
+<span class="nc" id="L152">                    repo.removeStudentFromGroup(repo.getStudent(studentId), groupId);</span>
+                }
+<span class="nc" id="L154">            } catch (NumberFormatException e) {</span>
+<span class="nc" id="L155">                throw new IncorrectRequestException(INCORRECT_NUMBER_FORMAT);</span>
+<span class="nc" id="L156">            }</span>
+<span class="nc" id="L157">        } else {</span>
+<span class="nc" id="L158">            deleteGroup(path);</span>
+        }
+<span class="nc" id="L160">    }</span>
+
+    private void deleteGroup(String id) throws IncorrectRequestException, NoDataException {
+        try {
+<span class="nc" id="L164">            Integer intId = Integer.parseInt(id);</span>
+<span class="nc" id="L165">            boolean removedSuccessful = repo.removeGroup(intId);</span>
+<span class="nc bnc" id="L166" title="All 2 branches missed.">            if (!removedSuccessful) throw new NoDataException(DELETE_NOT_SUCCESSFULLY);</span>
+<span class="nc" id="L167">            logger.trace(SERVICE_DELETE_END, true);</span>
+<span class="nc" id="L168">        } catch (NumberFormatException e) {</span>
+<span class="nc" id="L169">            throw new IncorrectRequestException(INCORRECT_NUMBER_FORMAT);</span>
+<span class="nc" id="L170">        }</span>
+<span class="nc" id="L171">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

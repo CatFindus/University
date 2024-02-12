@@ -1,0 +1,121 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="ru"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ScheduleService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">University</a> &gt; <a href="index.source.html" class="el_package">com.example.model.service</a> &gt; <span class="el_source">ScheduleService.java</span></div><h1>ScheduleService.java</h1><pre class="source lang-java linenums">package com.example.model.service;
+
+import com.example.exeptions.IncorrectRequestException;
+import com.example.exeptions.NoDataException;
+import com.example.mapper.ScheduleMapper;
+import com.example.mapper.ScheduleMapperImpl;
+import com.example.model.dto.Request.ScheduleUnitRequest;
+import com.example.model.dto.Response.DtoResponse;
+import com.example.model.vo.ModelUnit;
+import com.example.model.vo.Schedule;
+import com.example.model.vo.ScheduleUnit;
+import com.example.repository.RepositoryFacade;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.function.Predicate;
+
+import static com.example.consts.LoggerConstants.*;
+import static com.example.consts.ModelConstants.*;
+
+<span class="nc" id="L28">public class ScheduleService {</span>
+<span class="nc" id="L29">    private final static Logger logger = LoggerFactory.getLogger(ScheduleService.class);</span>
+<span class="nc" id="L30">    private final RepositoryFacade repo = new RepositoryFacade();</span>
+<span class="nc" id="L31">    private final ScheduleMapper mapper = new ScheduleMapperImpl();</span>
+
+    public List&lt;ModelUnit&gt; getDataByParameters(Map&lt;String, String[]&gt; parameterMap) throws IncorrectRequestException {
+<span class="nc" id="L34">        logger.trace(SERVICE_GETDATABYPARAMS_BEGIN, parameterMap.keySet());</span>
+<span class="nc" id="L35">        LocalDateTime beginDate = null;</span>
+<span class="nc" id="L36">        LocalDateTime endDate = null;</span>
+<span class="nc" id="L37">        DateTimeFormatter formatter = DateTimeFormatter.ofPattern(DATE_TIME_PARAM_PATTERN);</span>
+<span class="nc" id="L38">        List&lt;Predicate&lt;ScheduleUnit&gt;&gt; predicates = new ArrayList&lt;&gt;();</span>
+        try {
+<span class="nc bnc" id="L40" title="All 2 branches missed.">            for (String key : parameterMap.keySet()) {</span>
+<span class="nc" id="L41">                String value = parameterMap.get(key)[0];</span>
+<span class="nc bnc" id="L42" title="All 7 branches missed.">                switch (key) {</span>
+                    case RQ_BEGIN_DATE_TIME -&gt;
+<span class="nc" id="L44">                            beginDate = LocalDateTime.parse(parameterMap.get(RQ_BEGIN_DATE_TIME)[0], formatter);</span>
+                    case RQ_END_DATE_TIME -&gt;
+<span class="nc" id="L46">                            endDate = LocalDateTime.parse(parameterMap.get(RQ_END_DATE_TIME)[0], formatter);</span>
+<span class="nc" id="L47">                    case RQ_SUBJECT -&gt; predicates.add(unit -&gt; unit.hasSubject(value));</span>
+<span class="nc" id="L48">                    case RQ_GROUP_ID -&gt; predicates.add(unit -&gt; unit.hasGroup(Integer.parseInt(value)));</span>
+<span class="nc" id="L49">                    case RQ_STUDENT_ID -&gt; predicates.add(unit -&gt; unit.hasStudent(Integer.parseInt(value)));</span>
+<span class="nc" id="L50">                    case RQ_TEACHER_ID -&gt; predicates.add(unit -&gt; unit.hasTeacher(Integer.parseInt(value)));</span>
+<span class="nc" id="L51">                    default -&gt; throw new IncorrectRequestException(PARAM_NOT_RECOGNISED);</span>
+                }
+<span class="nc" id="L53">            }</span>
+<span class="nc" id="L54">        } catch (DateTimeParseException e) {</span>
+<span class="nc" id="L55">            throw new IncorrectRequestException(INCORRECT_DATE_FORMAT);</span>
+<span class="nc" id="L56">        } catch (NumberFormatException e) {</span>
+<span class="nc" id="L57">            throw new IncorrectRequestException(INCORRECT_NUMBER_FORMAT);</span>
+<span class="nc" id="L58">        }</span>
+<span class="nc bnc" id="L59" title="All 6 branches missed.">        if (beginDate == null || endDate == null || endDate.isBefore(beginDate))</span>
+<span class="nc" id="L60">            throw new IncorrectRequestException(INCORRECT_DATE_FORMAT);</span>
+<span class="nc" id="L61">        List&lt;ScheduleUnit&gt; schedules = repo.getSchedules(beginDate, endDate, predicates);</span>
+<span class="nc bnc" id="L62" title="All 2 branches missed.">        logger.trace(SERVICE_GETDATABYID_END, schedules != null ? schedules.stream().map(ScheduleUnit::getBegin) : null);</span>
+<span class="nc bnc" id="L63" title="All 2 branches missed.">        if (schedules == null) return new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L64">        return new ArrayList&lt;&gt;(schedules);</span>
+    }
+
+    public List&lt;DtoResponse&gt; mappingVoToDto(List&lt;ModelUnit&gt; modelUnitList) {
+<span class="nc" id="L68">        logger.trace(SERVICE_MAP_DTO_BEGIN, modelUnitList.size());</span>
+<span class="nc" id="L69">        List&lt;DtoResponse&gt; responses = new ArrayList&lt;&gt;();</span>
+<span class="nc bnc" id="L70" title="All 2 branches missed.">        if (modelUnitList.isEmpty()) return new ArrayList&lt;&gt;();</span>
+<span class="nc bnc" id="L71" title="All 2 branches missed.">        if (modelUnitList.get(0) instanceof ScheduleUnit)</span>
+<span class="nc bnc" id="L72" title="All 2 branches missed.">            for (ModelUnit unit : modelUnitList) responses.add(mapper.mapScheduleUnitToDto((ScheduleUnit) unit));</span>
+<span class="nc bnc" id="L73" title="All 2 branches missed.">        if (modelUnitList.get(0) instanceof Schedule)</span>
+<span class="nc bnc" id="L74" title="All 2 branches missed.">            for (ModelUnit unit : modelUnitList) responses.add(mapper.mapScheduleToDto((Schedule) unit));</span>
+<span class="nc" id="L75">        logger.trace(SERVICE_MAP_DTO_END, responses.size());</span>
+<span class="nc" id="L76">        return responses;</span>
+    }
+
+    public boolean create(ModelUnit modelUnit) {
+<span class="nc bnc" id="L80" title="All 2 branches missed.">        if (modelUnit instanceof Schedule schedule) {</span>
+<span class="nc" id="L81">            logger.trace(SERVICE_CREATE, ((Schedule) modelUnit).getDate());</span>
+<span class="nc" id="L82">            return repo.addSchedule(schedule);</span>
+<span class="nc bnc" id="L83" title="All 2 branches missed.">        } else if (modelUnit instanceof ScheduleUnit scheduleUnit) {</span>
+<span class="nc" id="L84">            logger.trace(SERVICE_CREATE, ((ScheduleUnit) modelUnit).getBegin());</span>
+<span class="nc" id="L85">            return repo.addScheduleUnit(scheduleUnit);</span>
+<span class="nc" id="L86">        } else return false;</span>
+    }
+
+    public List&lt;DtoResponse&gt; update(Map&lt;String, String[]&gt; parameterMap, ScheduleUnitRequest request) throws IncorrectRequestException, NoDataException {
+<span class="nc" id="L90">        logger.trace(SERVICE_UPDATE_BEGIN, parameterMap.keySet(), request);</span>
+<span class="nc" id="L91">        List&lt;ModelUnit&gt; unitList = getDataByParameters(parameterMap);</span>
+<span class="nc bnc" id="L92" title="All 2 branches missed.">        if (unitList.isEmpty()) throw new NoDataException(DATA_NOT_FOUND);</span>
+<span class="nc bnc" id="L93" title="All 2 branches missed.">        else if (unitList.size() &gt; 1) throw new NoDataException(SCHEDULE_NOT_UNIQUE);</span>
+        else {
+<span class="nc" id="L95">            ScheduleUnit oldUnit = (ScheduleUnit) unitList.get(0);</span>
+<span class="nc" id="L96">            Schedule schedule = repo.getScheduleByUnit(oldUnit);</span>
+<span class="nc" id="L97">            ScheduleUnit newUnit = mapper.mapDtoToScheduleUnit(request);</span>
+<span class="nc" id="L98">            create(newUnit);</span>
+<span class="nc" id="L99">            boolean removed = schedule.removeUnit(oldUnit);</span>
+<span class="nc bnc" id="L100" title="All 2 branches missed.">            if (!removed) throw new IncorrectRequestException();</span>
+<span class="nc" id="L101">            logger.trace(SERVICE_UPDATE_END);</span>
+<span class="nc" id="L102">            return List.of(mapper.mapScheduleUnitToDto(newUnit));</span>
+        }
+    }
+
+    public void delete(Map&lt;String, String[]&gt; parameterMap) throws IncorrectRequestException, NoDataException {
+<span class="nc" id="L107">        List&lt;ModelUnit&gt; unitList = getDataByParameters(parameterMap);</span>
+<span class="nc bnc" id="L108" title="All 2 branches missed.">        if (unitList.isEmpty()) throw new NoDataException(DATA_NOT_FOUND);</span>
+<span class="nc bnc" id="L109" title="All 2 branches missed.">        else if (unitList.size() &gt; 1) throw new NoDataException(SCHEDULE_NOT_UNIQUE);</span>
+        else {
+<span class="nc" id="L111">            ScheduleUnit oldUnit = (ScheduleUnit) unitList.get(0);</span>
+<span class="nc" id="L112">            Schedule schedule = repo.getScheduleByUnit(oldUnit);</span>
+<span class="nc" id="L113">            schedule.removeUnit(oldUnit);</span>
+        }
+<span class="nc" id="L115">    }</span>
+
+    public Schedule getScheduleForDate(LocalDate date) {
+<span class="nc" id="L118">        return repo.getSchedule(date);</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

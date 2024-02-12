@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="ru"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>SchedulesRepository.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">University</a> &gt; <a href="index.source.html" class="el_package">com.example.repository</a> &gt; <span class="el_source">SchedulesRepository.java</span></div><h1>SchedulesRepository.java</h1><pre class="source lang-java linenums">package com.example.repository;
+
+import com.example.model.vo.Schedule;
+import com.example.model.vo.ScheduleUnit;
+
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentSkipListMap;
+import java.util.function.Predicate;
+import java.util.stream.Stream;
+
+public class SchedulesRepository {
+<span class="fc" id="L16">    private static final SchedulesRepository instance = new SchedulesRepository();</span>
+    private final ConcurrentSkipListMap&lt;LocalDate, Schedule&gt; schedules;
+
+<span class="fc" id="L19">    private SchedulesRepository() {</span>
+<span class="fc" id="L20">        schedules = new ConcurrentSkipListMap&lt;&gt;();</span>
+<span class="fc" id="L21">    }</span>
+
+    static SchedulesRepository getInstance() {
+<span class="fc" id="L24">        return instance;</span>
+    }
+
+    List&lt;ScheduleUnit&gt; getSchedules(LocalDateTime begin, LocalDateTime end, List&lt;Predicate&lt;ScheduleUnit&gt;&gt; predicates) {
+<span class="nc" id="L28">        List&lt;ScheduleUnit&gt; result = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L29">        Map&lt;LocalDate, Schedule&gt; subMap = schedules.subMap(begin.toLocalDate(), true, end.toLocalDate(), true);</span>
+<span class="nc bnc" id="L30" title="All 2 branches missed.">        for (LocalDate key : subMap.keySet()) {</span>
+<span class="nc" id="L31">            Stream&lt;ScheduleUnit&gt; stream = subMap.get(key).getSchedules().stream();</span>
+<span class="nc bnc" id="L32" title="All 2 branches missed.">            for (Predicate&lt;ScheduleUnit&gt; predicate : predicates) stream = stream.filter(predicate);</span>
+<span class="nc" id="L33">            result.addAll(stream.toList());</span>
+<span class="nc" id="L34">        }</span>
+<span class="nc" id="L35">        return result;</span>
+    }
+    @SuppressWarnings(&quot;unused&quot;)
+    Schedule getSchedule(LocalDate date) {
+<span class="nc" id="L39">        return schedules.get(date);</span>
+    }
+
+    boolean addSchedule(Schedule schedule) {
+<span class="nc" id="L43">        Schedule returned = schedules.putIfAbsent(schedule.getDate(), schedule);</span>
+<span class="nc bnc" id="L44" title="All 2 branches missed.">        return returned == null;</span>
+    }
+
+    boolean addSchedule(ScheduleUnit unit) {
+<span class="nc" id="L48">        LocalDate date = unit.getBegin().toLocalDate();</span>
+<span class="nc bnc" id="L49" title="All 2 branches missed.">        if (schedules.containsKey(date)) return schedules.get(date).addScheduleUnit(unit);</span>
+        else {
+<span class="nc" id="L51">            Schedule schedule = new Schedule(date);</span>
+<span class="nc" id="L52">            schedule.addScheduleUnit(unit);</span>
+<span class="nc bnc" id="L53" title="All 2 branches missed.">            return null == schedules.put(date, schedule);</span>
+        }
+    }
+
+    Schedule getSheduleByUnit(ScheduleUnit unit) {
+<span class="nc" id="L58">        Stream&lt;Schedule&gt; stream = schedules.subMap(unit.getBegin().toLocalDate(), true, unit.getEnd().toLocalDate(), true)</span>
+<span class="nc" id="L59">                .values().stream().filter(schedule -&gt; schedule.getSchedules().contains(unit));</span>
+<span class="nc" id="L60">        return stream.findFirst().orElse(null);</span>
+    }
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

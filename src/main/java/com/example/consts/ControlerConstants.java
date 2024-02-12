@@ -16,8 +16,8 @@ public class ControlerConstants {
     public static final List<String> SCHEDULE_REQUEST_PARAMETERS = List.of(RQ_BEGIN_DATE_TIME, RQ_END_DATE_TIME , RQ_STUDENT_ID, RQ_GROUP_ID, RQ_TEACHER_ID, RQ_SUBJECT);
     public static final String SUBJECT_PARAMETER = "subject";
     public static final String WARN_MSG = "UUID:{}, message:{}";
-    public static final String NAME_REGEXP = "^(?=.{1,40}$)[а-яёА-ЯЁ]+(?:[-' ][а-яёА-ЯЁ]+)*$";
-    public static final String PHONE_REGEXP = "/(?:\\+|\\d)[\\d\\-\\(\\) ]{9,}\\d/g";
+    public static final String NAME_REGEXP = "[A-Za-z]{2,}";
+    public static final String PHONE_REGEXP = "^((8|\\+7)[\\- ]?)?(\\(?\\d{3}\\)?[\\- ]?)?[\\d\\- ]{7,10}$";
     public static final String NAME_INCORRECT = "Incorrect firstname/middlename/surname";
     public static final String PHONE_INCORRECT = "Incorrect phone number";
     public static final String BIRTHDAY_INCORRECT = "Birthday no passed validation";

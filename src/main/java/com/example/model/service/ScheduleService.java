@@ -13,6 +13,7 @@ import com.example.repository.RepositoryFacade;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
@@ -111,5 +112,9 @@ public class ScheduleService {
             Schedule schedule = repo.getScheduleByUnit(oldUnit);
             schedule.removeUnit(oldUnit);
         }
+    }
+
+    public Schedule getScheduleForDate(LocalDate date) {
+        return repo.getSchedule(date);
     }
 }

@@ -14,6 +14,7 @@ import com.example.model.service.GroupService;
 import com.example.model.service.Service;
 import com.example.model.service.StudentService;
 import com.example.model.vo.*;
+import com.example.validators.quantity.GroupQuantityValidator;
 import com.example.validators.requests.GroupsValidator;
 import com.example.view.JsonView;
 import com.example.view.View;
@@ -30,6 +31,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 import static com.example.consts.ControlerConstants.*;
 import static com.example.consts.LoggerConstants.*;
@@ -58,6 +60,7 @@ public class GroupsServlet extends HttpServlet {
         logger.trace(DO_GET_BEGIN);
         initialization(resp);
         try {
+
             new GroupsValidator(req).validate();
             if (req.getPathInfo() != null) {
                 String[] paths = req.getPathInfo().replaceFirst(PATH_SEPARATOR, EMPTY).split(PATH_SEPARATOR);
@@ -90,16 +93,19 @@ public class GroupsServlet extends HttpServlet {
             if (req.getPathInfo() == null && req.getQueryString() == null) addGroup(req, resp);
             else addStudentsToGroup(req);
             logger.trace(DO_POST_END);
-        } catch (IncorrectRequestException e) {
+        } catch (IncorrectRequestException | NoDataException e) {
             ErrorResponse response = new ErrorResponse(e.getMessage());
             logger.warn(WARN_MSG, response.getErrorID(), e.getMessage());
             view.update(List.of(response));
         }
     }
 
-    private void addStudentsToGroup(HttpServletRequest req) throws IncorrectRequestException {
+    private void addStudentsToGroup(HttpServletRequest req) throws IncorrectRequestException, NoDataException {
         String[] paths = req.getPathInfo().replaceFirst(PATH_SEPARATOR, EMPTY).split(PATH_SEPARATOR);
-        Group group = (Group) service.getDataById(paths[0]).get(0);
+        List<ModelUnit> list = service.getDataById(paths[0]);
+        if (list.isEmpty()) throw  new NoDataException(NO_DATA_FOUND);
+        Group group = (Group) list.get(0);
+        new GroupQuantityValidator(req, group).validate();
         if (paths.length > 1) {
             for (int i = 1; i < paths.length; i++) {
                 Student student = (Student) studentService.getDataById(paths[i]).get(0);
@@ -179,10 +185,12 @@ public class GroupsServlet extends HttpServlet {
         }
     }
 
-    private void removeStudentsFormGroup(HttpServletRequest req, HttpServletResponse resp) throws IncorrectRequestException {
+    private void removeStudentsFormGroup(HttpServletRequest req, HttpServletResponse resp) throws IncorrectRequestException, NoDataException {
         String[] paths = req.getPathInfo().replaceFirst(PATH_SEPARATOR, EMPTY).split(PATH_SEPARATOR);
-        Group group = (Group) service.getDataById(paths[0]).get(0);
-        if (group == null) throw new IncorrectRequestException();
+        List<ModelUnit> list = service.getDataById(paths[0]);
+        if (list.isEmpty()) throw new NoDataException(NO_DATA_FOUND);
+        Group group = (Group) list.get(0);
+        new GroupQuantityValidator(req,group).validate();
         List<Student> studentList = new ArrayList<>();
         if (paths.length != 1) {
             for (int i = 1; i < paths.length; i++) {
@@ -197,7 +205,11 @@ public class GroupsServlet extends HttpServlet {
                 studentList.add(student);
             }
         }
-        studentList.forEach(group.getStudents()::remove);
+        CopyOnWriteArrayList<Student> students = group.getStudents();
+        for (Student student : studentList) {
+            new GroupQuantityValidator(req,group).validate();
+            students.remove(student);
+        }
         resp.setStatus(200);
         view.update(service.mappingVoToDto(List.of(group)));
     }
