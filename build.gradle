@@ -2,6 +2,7 @@ plugins {
     id 'java'
     id 'application'
     id 'war'
+    id 'jacoco'
 }
 
 group = 'myorg.example'
@@ -10,26 +11,57 @@ version = '1.0-SNAPSHOT'
 repositories {
     mavenCentral()
 }
+ext {
+    javaLanguageLevel = '1.6'
+    generatedMapperSourcesDir = "${buildDir}/generated-src/mapstruct/main"
+}
 
+
+tasks.withType(JavaCompile) {
+    options.compilerArgs = [
+            '-Amapstruct.suppressGeneratorTimestamp=true'
+    ]
+}
 dependencies {
     //utils
     implementation group: 'org.apache.logging.log4j', name: 'log4j-slf4j-impl', version: '2.22.0'
     implementation 'com.fasterxml.jackson.core:jackson-databind:2.16.1'
+    implementation group: 'com.fasterxml.jackson.datatype', name: 'jackson-datatype-jsr310', version: '2.16.1'
     implementation "org.mapstruct:mapstruct:1.5.5.Final"
+    implementation group: 'org.projectlombok', name: 'lombok-mapstruct-binding', version: '0.2.0'
+    implementation group: 'org.jacoco', name: 'org.jacoco.core', version: '0.8.11'
+    implementation group: 'jakarta.servlet', name: 'jakarta.servlet-api', version: '6.0.0'
 
     compileOnly 'org.projectlombok:lombok:1.18.30'
 
     annotationProcessor 'org.projectlombok:lombok:1.18.30'
     annotationProcessor "org.mapstruct:mapstruct-processor:1.5.5.Final"
 
-    testImplementation 'org.mockito:mockito-core:5.10.0'
-
+    testImplementation group: 'org.mockito', name: 'mockito-core', version: '5.10.0'
     testCompileOnly 'org.projectlombok:lombok:1.18.30'
     testAnnotationProcessor 'org.projectlombok:lombok:1.18.30'
     testImplementation platform('org.junit:junit-bom:5.9.1')
     testImplementation 'org.junit.jupiter:junit-jupiter'
-}
+    testImplementation group: 'org.mockito', name: 'mockito-junit-jupiter', version: '5.10.0'
 
+
+}
+jacoco {
+    toolVersion = "0.8.11"
+    reportsDirectory = layout.projectDirectory.dir('testReport')
+}
 test {
     useJUnitPlatform()
+    finalizedBy jacocoTestReport
+}
+jacocoTestReport {
+    dependsOn test
+    afterEvaluate {
+        classDirectories.setFrom(files(classDirectories.files.collect {
+            fileTree(dir: it, exclude: ['com/example/model/dto/*', 'com/example/consts'])
+        }))
+    }
+}
+war {
+    war.archiveFileName = "ROOT.war"
 }
