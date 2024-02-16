@@ -25,6 +25,13 @@ public class RepositoryFacade {
         groupsRepository = GroupsRepository.getInstance();
     }
 
+    public RepositoryFacade(StudentsRepository studentsRepository, TeachersRepository teachersRepository, SchedulesRepository schedulesRepository, GroupsRepository groupsRepository) {
+        this.studentsRepository = studentsRepository;
+        this.teachersRepository = teachersRepository;
+        this.schedulesRepository = schedulesRepository;
+        this.groupsRepository = groupsRepository;
+    }
+
     public Student getStudent(int id) {
         Student student = studentsRepository.getStudentById(id);
         logger.trace(REPO_GET_STUDENT_BY_ID, id, student);

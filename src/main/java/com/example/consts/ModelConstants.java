@@ -47,6 +47,7 @@ public static final String MAX_CLASSES_FOR_GROUP = "MAX_CLASSES_FOR_GROUP";
 public static final String ERROR_MAX_CLASSES_FOR_GROUP = "Error to add. Group has max quantity classes per day";
 public static final String MIN_CLASSES_FOR_GROUP = "MIN_CLASSES_FOR_GROUP";
 public static final String ERROR_MIN_CLASSES_FOR_GROUP = "Error to remove. Group has min quantity classes per day";
+public static final String ERROR_TO_CHANGE_SCHEDULE = "Can't change schedule to request parameters";
 public static final int DEFAULT_MAX_STD_IN_GROUP = 30;
 public static final int DEFAULT_MIN_STD_IN_GROUP = 5;
 public static final int DEFAULT_MAX_CLASSES_FOR_GROUP = 5;

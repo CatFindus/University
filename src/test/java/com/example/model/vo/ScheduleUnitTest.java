@@ -93,4 +93,14 @@ class ScheduleUnitTest {
         assertTrue(su1000_1031.hasStudent(student1.getId()));
         assertFalse(su1000_1031.hasStudent(student2.getId()));
     }
+    @Test
+    void  equalsAndHashCode() {
+        LocalDateTime time = LocalDateTime.now();
+        Teacher teacher = new Teacher();
+        Group group = new Group();
+        ScheduleUnit scheduleUnit1 = new ScheduleUnit(time,time, teacher, group, null);
+        ScheduleUnit scheduleUnit2 = new ScheduleUnit(time,time, teacher, group, null);
+        assertEquals(scheduleUnit1, scheduleUnit2);
+        assertEquals(scheduleUnit1.hashCode(), scheduleUnit2.hashCode());
+    }
 }

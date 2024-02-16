@@ -1,15 +1,15 @@
 package com.example.model.service;
 
+import com.example.consts.ControlerConstants;
+import com.example.consts.ModelConstants;
 import com.example.exeptions.IncorrectRequestException;
 import com.example.exeptions.NoDataException;
 import com.example.mapper.ScheduleMapper;
-import com.example.mapper.ScheduleMapperImpl;
 import com.example.model.dto.Request.ScheduleUnitRequest;
 import com.example.model.dto.Response.DtoResponse;
-import com.example.model.vo.ModelUnit;
-import com.example.model.vo.Schedule;
-import com.example.model.vo.ScheduleUnit;
+import com.example.model.vo.*;
 import com.example.repository.RepositoryFacade;
+import lombok.AllArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -22,13 +22,17 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Predicate;
 
+import static com.example.consts.ControlerConstants.INCORRECT_REQUEST_ARGS;
+import static com.example.consts.ControlerConstants.NO_DATA_FOUND;
 import static com.example.consts.LoggerConstants.*;
 import static com.example.consts.ModelConstants.*;
-
+@AllArgsConstructor
 public class ScheduleService {
     private final static Logger logger = LoggerFactory.getLogger(ScheduleService.class);
-    private final RepositoryFacade repo = new RepositoryFacade();
-    private final ScheduleMapper mapper = new ScheduleMapperImpl();
+    private final RepositoryFacade repo;
+    private final ScheduleMapper mapper;
+    private final Service groupService;
+    private final Service teacherService;
 
     public List<ModelUnit> getDataByParameters(Map<String, String[]> parameterMap) throws IncorrectRequestException {
         logger.trace(SERVICE_GETDATABYPARAMS_BEGIN, parameterMap.keySet());
@@ -94,10 +98,17 @@ public class ScheduleService {
         else {
             ScheduleUnit oldUnit = (ScheduleUnit) unitList.get(0);
             Schedule schedule = repo.getScheduleByUnit(oldUnit);
-            ScheduleUnit newUnit = mapper.mapDtoToScheduleUnit(request);
-            create(newUnit);
+            Group group = (Group) groupService.getDataById(request.getGroupId().toString()).get(0);
+            Teacher teacher = (Teacher) teacherService.getDataById(request.getTeacherId().toString()).get(0);
+            if (group==null || teacher==null) throw new IncorrectRequestException(INCORRECT_REQUEST_ARGS);
+            ScheduleUnit newUnit = mapper.mapDtoToScheduleUnit(request, group, teacher);
             boolean removed = schedule.removeUnit(oldUnit);
-            if (!removed) throw new IncorrectRequestException();
+            if (!removed) throw new IncorrectRequestException(INCORRECT_REQUEST_ARGS);
+            boolean created = create(newUnit);
+            if(!created) {
+                create(oldUnit);
+                throw new NoDataException(ERROR_TO_CHANGE_SCHEDULE);
+            }
             logger.trace(SERVICE_UPDATE_END);
             return List.of(mapper.mapScheduleUnitToDto(newUnit));
         }
@@ -110,7 +121,9 @@ public class ScheduleService {
         else {
             ScheduleUnit oldUnit = (ScheduleUnit) unitList.get(0);
             Schedule schedule = repo.getScheduleByUnit(oldUnit);
-            schedule.removeUnit(oldUnit);
+            if (schedule==null) throw new NoDataException(NO_DATA_FOUND);
+            boolean removed =  schedule.removeUnit(oldUnit);
+            if (!removed) throw new NoDataException(NO_DATA_FOUND);
         }
     }
 

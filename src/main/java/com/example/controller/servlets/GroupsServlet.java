@@ -1,5 +1,6 @@
 package com.example.controller.servlets;
 
+import com.example.controller.ServiceFactory;
 import com.example.exeptions.IncorrectRequestException;
 import com.example.exeptions.NoDataException;
 import com.example.mapper.GroupMapper;
@@ -47,12 +48,13 @@ public class GroupsServlet extends HttpServlet {
     private transient ViewMapper jsonMapper;
     private transient GroupMapper mapper;
 
+
     private void initialization(HttpServletResponse resp) {
         view = new JsonView(resp);
         jsonMapper = new JsonMapper();
-        service = new GroupService();
-        studentService = new StudentService();
         mapper = new GroupMapperImpl();
+        studentService = ServiceFactory.getService(StudentService.class);
+        service = ServiceFactory.getService(GroupService.class);
     }
 
     @Override
@@ -79,7 +81,6 @@ public class GroupsServlet extends HttpServlet {
             logger.warn(WARN_MSG, response.getErrorID(), e.getMessage());
             view.update(List.of(response));
         }
-        super.doGet(req, resp);
     }
 
 

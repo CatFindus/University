@@ -13,8 +13,7 @@ import com.example.repository.RepositoryFacade;
 import org.mapstruct.Mapper;
 
 @Mapper
-public abstract class ScheduleMapper {
-    private final RepositoryFacade repo = new RepositoryFacade();
+public interface ScheduleMapper {
 
     public abstract GroupScheduleResponce mapGroupToDto(Group group);
 
@@ -26,17 +25,7 @@ public abstract class ScheduleMapper {
     @SuppressWarnings("unused")
     public abstract Schedule mapDtoToSchedule(ScheduleRequest request);
 
-    public ScheduleUnit mapDtoToScheduleUnit(ScheduleUnitRequest request) throws IncorrectRequestException {
-        if (request.getGroupId() == null && request.getStudentId() == null) throw new IncorrectRequestException(ModelConstants.PARAM_NOT_FOUND);
-        return ScheduleUnit.builder().
-                begin(request.getBegin()).
-                end(request.getEnd()).
-                subject(Subject.getSubject(request.getSubject())).
-                teacher(repo.getTeacher(request.getTeacherId())).
-                group(request.getGroupId() != null ?
-                        repo.getGroup(request.getGroupId()) :
-                        repo.getGroup(repo.getGroupIdByStudent(repo.getStudent(request.getStudentId()))))
-                .build();
+    public abstract ScheduleUnit mapDtoToScheduleUnit(ScheduleUnitRequest request, Group group , Teacher teacher);
 
-    }
+
 }

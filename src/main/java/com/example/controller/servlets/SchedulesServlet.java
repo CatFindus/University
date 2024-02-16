@@ -1,18 +1,18 @@
 package com.example.controller.servlets;
 
+import com.example.controller.ServiceFactory;
 import com.example.exeptions.IncorrectRequestException;
 import com.example.exeptions.NoDataException;
-import com.example.mapper.ScheduleMapper;
-import com.example.mapper.ScheduleMapperImpl;
+import com.example.mapper.*;
 import com.example.mapper.viewmapper.JsonMapper;
 import com.example.mapper.viewmapper.ViewMapper;
 import com.example.model.dto.Request.ScheduleUnitRequest;
 import com.example.model.dto.Response.DtoResponse;
 import com.example.model.dto.Response.ErrorResponse;
+import com.example.model.service.GroupService;
 import com.example.model.service.ScheduleService;
-import com.example.model.vo.ModelUnit;
-import com.example.model.vo.Schedule;
-import com.example.model.vo.ScheduleUnit;
+import com.example.model.service.TeacherService;
+import com.example.model.vo.*;
 import com.example.validators.quantity.ScheduleQuantityValidator;
 import com.example.validators.requests.SchedulesValidator;
 import com.example.view.JsonView;
@@ -36,14 +36,18 @@ public class SchedulesServlet extends HttpServlet {
     private static final Logger logger = LoggerFactory.getLogger(TeachersServlet.class);
     private transient View view;
     private transient ScheduleService service;
+    private transient GroupService groupService;
+    private transient TeacherService teacherService;
     private transient ViewMapper jsonMapper;
     private transient ScheduleMapper mapper;
 
     private void initialization(HttpServletResponse resp) {
         view = new JsonView(resp);
         jsonMapper = new JsonMapper();
-        service = new ScheduleService();
         mapper = new ScheduleMapperImpl();
+        groupService = ServiceFactory.getService(GroupService.class);
+        teacherService = ServiceFactory.getService(TeacherService.class);
+        service = ServiceFactory.getService(ScheduleService.class);
     }
 
     @Override
@@ -66,9 +70,6 @@ public class SchedulesServlet extends HttpServlet {
     }
 
 
-
-
-
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws IOException {
         logger.trace(DO_POST_BEGIN);
@@ -76,9 +77,11 @@ public class SchedulesServlet extends HttpServlet {
         try {
             new SchedulesValidator(req).validate();
             ScheduleUnitRequest request = jsonMapper.getDtoFromRequest(ScheduleUnitRequest.class, req.getReader());
-            ScheduleUnit unit = mapper.mapDtoToScheduleUnit(request);
+            Group group = (Group) groupService.getDataById(request.getGroupId().toString()).get(0);
+            Teacher teacher = (Teacher) teacherService.getDataById(request.getTeacherId().toString()).get(0);
+            ScheduleUnit unit = mapper.mapDtoToScheduleUnit(request, group, teacher);
             Schedule schedule = service.getScheduleForDate(unit.getBegin().toLocalDate());
-            if (schedule!=null) new ScheduleQuantityValidator(req,unit.getGroup(),schedule).validate();
+            if (schedule != null) new ScheduleQuantityValidator(req, unit.getGroup(), schedule).validate();
             if (service.create(unit)) {
                 resp.setStatus(201);
                 view.update(List.of(mapper.mapScheduleUnitToDto(unit)));
@@ -94,7 +97,6 @@ public class SchedulesServlet extends HttpServlet {
             view.update(List.of(response));
         }
     }
-
 
 
     @Override

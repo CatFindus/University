@@ -51,4 +51,11 @@ class GroupTest {
     void getStudentsQuantity() {
         assertEquals(2, group.getStudentsQuantity());
     }
+    @Test
+    void  equalsAndHashCode() {
+        Group group1 = new Group("number");
+        Group group2 = new Group("number");
+        assertNotEquals(group1, group2);
+        assertNotEquals(group1.hashCode(), group2.hashCode());
+    }
 }

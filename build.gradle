@@ -37,12 +37,14 @@ dependencies {
     annotationProcessor 'org.projectlombok:lombok:1.18.30'
     annotationProcessor "org.mapstruct:mapstruct-processor:1.5.5.Final"
 
-    testImplementation 'org.mockito:mockito-core:5.10.0'
-
+    testImplementation group: 'org.mockito', name: 'mockito-core', version: '5.10.0'
     testCompileOnly 'org.projectlombok:lombok:1.18.30'
     testAnnotationProcessor 'org.projectlombok:lombok:1.18.30'
     testImplementation platform('org.junit:junit-bom:5.9.1')
     testImplementation 'org.junit.jupiter:junit-jupiter'
+    testImplementation group: 'org.mockito', name: 'mockito-junit-jupiter', version: '5.10.0'
+
+
 }
 jacoco {
     toolVersion = "0.8.11"
@@ -54,4 +56,12 @@ test {
 }
 jacocoTestReport {
     dependsOn test
+    afterEvaluate {
+        classDirectories.setFrom(files(classDirectories.files.collect {
+            fileTree(dir: it, exclude: ['com/example/model/dto/*', 'com/example/consts'])
+        }))
+    }
+}
+war {
+    war.archiveFileName = "ROOT.war"
 }

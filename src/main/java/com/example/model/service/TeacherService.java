@@ -3,13 +3,13 @@ package com.example.model.service;
 import com.example.exeptions.IncorrectRequestException;
 import com.example.exeptions.NoDataException;
 import com.example.mapper.TeacherMapper;
-import com.example.mapper.TeacherMapperImpl;
 import com.example.model.dto.Request.DtoRequest;
 import com.example.model.dto.Request.TeacherRequest;
 import com.example.model.dto.Response.DtoResponse;
 import com.example.model.vo.ModelUnit;
 import com.example.model.vo.Teacher;
 import com.example.repository.RepositoryFacade;
+import lombok.AllArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -22,12 +22,11 @@ import java.util.function.Predicate;
 
 import static com.example.consts.LoggerConstants.*;
 import static com.example.consts.ModelConstants.*;
-
+@AllArgsConstructor
 public class TeacherService implements Service {
     private final static Logger logger = LoggerFactory.getLogger(StudentService.class);
-    private final RepositoryFacade repo = new RepositoryFacade();
-    private final TeacherMapper mapper = new TeacherMapperImpl();
-
+    private final RepositoryFacade repo;
+    private final TeacherMapper mapper;
     @Override
     public List<ModelUnit> getDataById(String idString) throws IncorrectRequestException {
         logger.trace(SERVICE_GETDATABYID_BEGIN, idString);

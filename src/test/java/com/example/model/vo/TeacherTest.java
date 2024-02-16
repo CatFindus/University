@@ -45,4 +45,12 @@ class TeacherTest {
 
         assertEquals(LocalDate.now().getYear() - 2000, t.getExperience());
     }
+    @Test
+    void  equalsAndHashCode() {
+        Teacher teacher1 = new Teacher();
+        Teacher teacher2 = new Teacher();
+        assertNotEquals(teacher1, teacher2);
+        assertNotEquals(teacher1.hashCode(),teacher2.hashCode());
+    }
+
 }

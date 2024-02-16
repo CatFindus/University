@@ -1,9 +1,9 @@
 package com.example.model.service;
 
+import com.example.consts.ModelConstants;
 import com.example.exeptions.IncorrectRequestException;
 import com.example.exeptions.NoDataException;
 import com.example.mapper.GroupMapper;
-import com.example.mapper.GroupMapperImpl;
 import com.example.model.dto.Request.DtoRequest;
 import com.example.model.dto.Request.GroupRequest;
 import com.example.model.dto.Response.DtoResponse;
@@ -11,6 +11,7 @@ import com.example.model.vo.Group;
 import com.example.model.vo.ModelUnit;
 import com.example.model.vo.Student;
 import com.example.repository.RepositoryFacade;
+import lombok.AllArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -23,11 +24,12 @@ import java.util.stream.Stream;
 import static com.example.consts.LoggerConstants.*;
 import static com.example.consts.ModelConstants.*;
 
+@AllArgsConstructor
 public class GroupService implements Service {
     private final static Logger logger = LoggerFactory.getLogger(GroupService.class);
-    private final RepositoryFacade repo = new RepositoryFacade();
-    private final GroupMapper mapper = new GroupMapperImpl();
-    private final Service service = new StudentService();
+    private final RepositoryFacade repo;
+    private final GroupMapper mapper;
+    private final Service studentService;
 
     @Override
     public List<ModelUnit> getDataById(String idString) throws IncorrectRequestException {
@@ -55,7 +57,8 @@ public class GroupService implements Service {
                 case RQ_NUMBER -> predicates.add(gr -> gr.getNumber().equalsIgnoreCase(value));
                 case RQ_ID -> {
                     try {
-                        groups = List.of(repo.getGroup(Integer.parseInt(value)));
+                        Group group = repo.getGroup(Integer.parseInt(value));
+                        groups = group != null ? List.of(group) : new ArrayList<>();
                     } catch (NumberFormatException e) {
                         throw new IncorrectRequestException(INCORRECT_NUMBER_FORMAT);
                     }
@@ -81,7 +84,7 @@ public class GroupService implements Service {
         List<DtoResponse> list = new ArrayList<>();
         for (ModelUnit unit : modelUnitList) {
             Group group = (Group) unit;
-            List<DtoResponse> studentResponses = new ArrayList<>(service.mappingVoToDto(new ArrayList<>(group.getStudents())));
+            List<DtoResponse> studentResponses = new ArrayList<>(studentService.mappingVoToDto(new ArrayList<>(group.getStudents())));
             list.add(mapper.mapToResponse(group, studentResponses));
         }
         logger.trace(SERVICE_MAP_DTO_END, list.size());
@@ -110,9 +113,9 @@ public class GroupService implements Service {
                         repo.addStudentToGroup(student, groupId);
                     }
                     Group group = repo.getGroup(groupId);
-                    if (group==null) throw new NoDataException(DATA_NOT_FOUND);
+                    if (group == null) throw new NoDataException(DATA_NOT_FOUND);
                     List<ModelUnit> students = new ArrayList<>(group.getStudents());
-                    List<DtoResponse> studentResponses = service.mappingVoToDto(students);
+                    List<DtoResponse> studentResponses = studentService.mappingVoToDto(students);
                     return List.of(mapper.mapToResponse(group, studentResponses));
                 } catch (NumberFormatException e) {
                     throw new IncorrectRequestException(INCORRECT_NUMBER_FORMAT);
@@ -127,10 +130,11 @@ public class GroupService implements Service {
         try {
             int intId = Integer.parseInt(id);
             Group group = repo.getGroup(intId);
+            if (group==null) throw new IncorrectRequestException(DATA_NOT_FOUND);
             GroupRequest groupRequest = (GroupRequest) dtoRequest;
             if (groupRequest.getNumber() != null) group.setNumber(groupRequest.getNumber());
             List<ModelUnit> students = new ArrayList<>(group.getStudents());
-            List<DtoResponse> studentResponses = new ArrayList<>(service.mappingVoToDto(students));
+            List<DtoResponse> studentResponses = new ArrayList<>(studentService.mappingVoToDto(students));
             logger.trace(SERVICE_UPDATE_END);
             return List.of(mapper.mapToResponse(group, studentResponses));
         } catch (NumberFormatException e) {

@@ -67,4 +67,11 @@ class ScheduleTest {
         schedule.addScheduleUnit(su1100_1130_2);
         assertEquals(2, schedule.getClassesByGroup(group1).size());
     }
+    @Test
+    void  equalsAndHashCode() {
+        Schedule schedule1 = new Schedule(LocalDate.now());
+        Schedule schedule2 = new Schedule(LocalDate.now());
+        assertEquals(schedule1,schedule2);
+        assertEquals(schedule1.hashCode(), schedule2.hashCode());
+    }
 }

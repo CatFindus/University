@@ -3,7 +3,6 @@ package com.example.model.service;
 import com.example.exeptions.IncorrectRequestException;
 import com.example.exeptions.NoDataException;
 import com.example.mapper.StudentMapper;
-import com.example.mapper.StudentMapperImpl;
 import com.example.model.dto.Request.DtoRequest;
 import com.example.model.dto.Request.StudentRequest;
 import com.example.model.dto.Response.DtoResponse;
@@ -11,7 +10,7 @@ import com.example.model.vo.Group;
 import com.example.model.vo.ModelUnit;
 import com.example.model.vo.Student;
 import com.example.repository.RepositoryFacade;
-import lombok.RequiredArgsConstructor;
+import lombok.AllArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -24,11 +23,11 @@ import java.util.stream.Stream;
 import static com.example.consts.LoggerConstants.*;
 import static com.example.consts.ModelConstants.*;
 
-@RequiredArgsConstructor
+@AllArgsConstructor
 public class StudentService implements Service {
     private final static Logger logger = LoggerFactory.getLogger(StudentService.class);
-    private final RepositoryFacade repo = new RepositoryFacade();
-    private final StudentMapper mapper = new StudentMapperImpl();
+    private final RepositoryFacade repo;
+    private final StudentMapper mapper;
 
     @Override
     public List<ModelUnit> getDataById(String idString) throws IncorrectRequestException {

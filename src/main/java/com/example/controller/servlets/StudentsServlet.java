@@ -1,5 +1,6 @@
 package com.example.controller.servlets;
 
+import com.example.controller.ServiceFactory;
 import com.example.exeptions.IncorrectRequestException;
 import com.example.exeptions.NoDataException;
 import com.example.mapper.StudentMapper;
@@ -14,6 +15,7 @@ import com.example.model.service.Service;
 import com.example.model.service.StudentService;
 import com.example.model.vo.ModelUnit;
 import com.example.model.vo.Student;
+import com.example.repository.RepositoryFacade;
 import com.example.validators.parameters.NameValidator;
 import com.example.validators.parameters.PhoneValidator;
 import com.example.validators.requests.StudentsValidator;
@@ -45,8 +47,8 @@ public class StudentsServlet extends HttpServlet {
     private void initialization(HttpServletResponse resp) {
         view = new JsonView(resp);
         jsonMapper = new JsonMapper();
-        service = new StudentService();
         mapper = new StudentMapperImpl();
+        service = ServiceFactory.getService(StudentService.class);
     }
 
     @Override
