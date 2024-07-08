@@ -3,17 +3,14 @@ package com.example.controller.servlets;
 import com.example.controller.ServiceFactory;
 import com.example.exeptions.IncorrectRequestException;
 import com.example.exeptions.NoDataException;
-import com.example.mapper.*;
 import com.example.mapper.viewmapper.JsonMapper;
 import com.example.mapper.viewmapper.ViewMapper;
 import com.example.model.dto.Request.ScheduleUnitRequest;
 import com.example.model.dto.Response.DtoResponse;
 import com.example.model.dto.Response.ErrorResponse;
-import com.example.model.service.GroupService;
+import com.example.model.dto.Response.NoDataResponse;
 import com.example.model.service.ScheduleService;
-import com.example.model.service.TeacherService;
-import com.example.model.vo.*;
-import com.example.validators.quantity.ScheduleQuantityValidator;
+import com.example.model.service.Service;
 import com.example.validators.requests.SchedulesValidator;
 import com.example.view.JsonView;
 import com.example.view.View;
@@ -30,23 +27,19 @@ import java.util.List;
 
 import static com.example.consts.ControlerConstants.WARN_MSG;
 import static com.example.consts.LoggerConstants.*;
+import static com.example.consts.ModelConstants.EMPTY;
+import static com.example.consts.ModelConstants.PATH_SEPARATOR;
 
 @WebServlet(name = "ScheduleServlet", urlPatterns = "/schedules/*")
 public class SchedulesServlet extends HttpServlet {
     private static final Logger logger = LoggerFactory.getLogger(TeachersServlet.class);
     private transient View view;
-    private transient ScheduleService service;
-    private transient GroupService groupService;
-    private transient TeacherService teacherService;
+    private transient Service service;
     private transient ViewMapper jsonMapper;
-    private transient ScheduleMapper mapper;
 
     private void initialization(HttpServletResponse resp) {
         view = new JsonView(resp);
         jsonMapper = new JsonMapper();
-        mapper = new ScheduleMapperImpl();
-        groupService = ServiceFactory.getService(GroupService.class);
-        teacherService = ServiceFactory.getService(TeacherService.class);
         service = ServiceFactory.getService(ScheduleService.class);
     }
 
@@ -56,19 +49,19 @@ public class SchedulesServlet extends HttpServlet {
         initialization(resp);
         try {
             new SchedulesValidator(req).validate();
-            List<ModelUnit> units = service.getDataByParameters(req.getParameterMap());
-            if (units.isEmpty()) view.update(new ArrayList<>());
-            else {
-                view.update(service.mappingVoToDto(units));
-            }
+            List<DtoResponse> responses = new ArrayList<>();
+            if (req.getPathInfo()!=null) {
+                DtoResponse response = service.getDataById(req.getPathInfo().replaceFirst(PATH_SEPARATOR, EMPTY));
+                if (!(response instanceof NoDataResponse)) responses.add(response);
+            } else responses = service.getDataByParameters(req.getParameterMap());
+            view.update(responses);
             logger.trace(DO_GET_END);
-        } catch (IncorrectRequestException e) {
+        } catch (IncorrectRequestException | NoDataException e) {
             ErrorResponse response = new ErrorResponse(e.getMessage());
             logger.warn(WARN_MSG, response.getErrorID(), e.getMessage());
             view.update(List.of(response));
         }
     }
-
 
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws IOException {
@@ -77,21 +70,10 @@ public class SchedulesServlet extends HttpServlet {
         try {
             new SchedulesValidator(req).validate();
             ScheduleUnitRequest request = jsonMapper.getDtoFromRequest(ScheduleUnitRequest.class, req.getReader());
-            Group group = (Group) groupService.getDataById(request.getGroupId().toString()).get(0);
-            Teacher teacher = (Teacher) teacherService.getDataById(request.getTeacherId().toString()).get(0);
-            ScheduleUnit unit = mapper.mapDtoToScheduleUnit(request, group, teacher);
-            Schedule schedule = service.getScheduleForDate(unit.getBegin().toLocalDate());
-            if (schedule != null) new ScheduleQuantityValidator(req, unit.getGroup(), schedule).validate();
-            if (service.create(unit)) {
-                resp.setStatus(201);
-                view.update(List.of(mapper.mapScheduleUnitToDto(unit)));
-            } else {
-                resp.setStatus(200);
-                view.update(new ArrayList<>());
-
-            }
+            DtoResponse response = service.create(req.getPathInfo().replaceFirst(PATH_SEPARATOR, EMPTY), request);
+            view.update(List.of(response));
             logger.trace(DO_POST_END);
-        } catch (IncorrectRequestException e) {
+        } catch (IncorrectRequestException | NoDataException e) {
             ErrorResponse response = new ErrorResponse(e.getMessage());
             logger.warn(WARN_MSG, response.getErrorID(), e.getMessage());
             view.update(List.of(response));
@@ -106,8 +88,8 @@ public class SchedulesServlet extends HttpServlet {
         try {
             new SchedulesValidator(req).validate();
             ScheduleUnitRequest request = jsonMapper.getDtoFromRequest(ScheduleUnitRequest.class, req.getReader());
-            List<DtoResponse> responses = service.update(req.getParameterMap(), request);
-            view.update(responses);
+            DtoResponse response = service.update(req.getPathInfo().replaceFirst(PATH_SEPARATOR,EMPTY), request);
+            view.update(List.of(response));
             logger.trace(DO_PUT_END);
         } catch (IncorrectRequestException | NoDataException e) {
             ErrorResponse response = new ErrorResponse(e.getMessage());
@@ -122,7 +104,7 @@ public class SchedulesServlet extends HttpServlet {
         initialization(resp);
         try {
             new SchedulesValidator(req).validate();
-            service.delete(req.getParameterMap());
+            service.delete(req.getPathInfo().replaceFirst(PATH_SEPARATOR, EMPTY), null);
             resp.setStatus(204);
             view.update(new ArrayList<>());
             logger.trace(DO_DELETE_END);

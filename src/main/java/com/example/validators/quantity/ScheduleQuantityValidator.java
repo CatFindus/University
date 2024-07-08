@@ -1,11 +1,8 @@
 package com.example.validators.quantity;
 
 import com.example.exeptions.IncorrectRequestException;
-import com.example.model.vo.Group;
-import com.example.model.vo.Schedule;
-import com.example.model.vo.Student;
+import com.example.model.entities.Student;
 import com.example.validators.Validators;
-import jakarta.servlet.http.HttpServletRequest;
 import lombok.AllArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -22,9 +19,8 @@ import static com.example.consts.ModelConstants.*;
 @AllArgsConstructor
 public class ScheduleQuantityValidator extends Validators {
     private static final Logger logger = LoggerFactory.getLogger(ScheduleQuantityValidator.class);
-    private HttpServletRequest req;
-    private Group group;
-    private Schedule schedule;
+    private String reqMethod;
+    private Integer groupCount;
 
     @Override
     protected void validation() throws IncorrectRequestException {
@@ -38,8 +34,7 @@ public class ScheduleQuantityValidator extends Validators {
         }
         max = Integer.parseInt(properties.getProperty(MAX_CLASSES_FOR_GROUP));
         min = Integer.parseInt(properties.getProperty(MIN_CLASSES_FOR_GROUP));
-        String method = req.getMethod();
-        switch (method) {
+        switch (reqMethod) {
             case POST -> doMaxQuantityValidation(max);
             case DELETE -> doMinQuantityValidation(min);
             default -> throw new IncorrectRequestException(UNKNOWN_ERROR);
@@ -48,14 +43,14 @@ public class ScheduleQuantityValidator extends Validators {
     }
 
     private void doMinQuantityValidation(int min) throws IncorrectRequestException {
-        if (schedule.getClassesByGroup(group).size() <= min) {
+        if (groupCount <= min) {
             logger.error(ERROR_MIN_CLASSES_FOR_GROUP);
             throw new IncorrectRequestException(ERROR_MIN_CLASSES_FOR_GROUP);
         }
     }
 
     private void doMaxQuantityValidation(int max) throws IncorrectRequestException {
-        if (schedule.getClassesByGroup(group).size() >= max) {
+        if (groupCount >= max) {
             logger.error(ERROR_MAX_CLASSES_FOR_GROUP);
             throw new IncorrectRequestException(ERROR_MAX_CLASSES_FOR_GROUP);
         }

@@ -23,6 +23,6 @@ public class TeacherRequest implements DtoRequest {
     @JsonSerialize(using = LocalDateSerializer.class)
     private LocalDate experienceBegin;
     private String phoneNumber;
-
+    private String rqSubject;
 
 }

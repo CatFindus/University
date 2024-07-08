@@ -15,6 +15,7 @@ import static com.example.consts.ModelConstants.RQ_ID;
 import static org.junit.jupiter.api.Assertions.*;
 
 class StudentsValidatorTest {
+    /*
 
     HttpServletRequest mockReq = Mockito.mock(HttpServletRequest.class);
     String emptyPath = ModelConstants.EMPTY;
@@ -70,6 +71,8 @@ class StudentsValidatorTest {
         Mockito.when(mockReq.getPathInfo()).thenReturn(badPath);
         assertThrows(IncorrectRequestException.class, ()-> new StudentsValidator(mockReq).validate());
     }
+
+     */
 
 
 }

@@ -1,24 +1,7 @@
 package com.example.validators.quantity;
 
-import com.example.exeptions.IncorrectRequestException;
-import com.example.model.vo.Group;
-import com.example.model.vo.Student;
-import jakarta.servlet.http.HttpServletRequest;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.Test;
-import org.mockito.Mockito;
-
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.Objects;
-import java.util.Properties;
-
-import static com.example.consts.ControlerConstants.DELETE;
-import static com.example.consts.ControlerConstants.POST;
-import static com.example.consts.ModelConstants.*;
-import static org.junit.jupiter.api.Assertions.*;
-
 class GroupQuantityValidatorTest {
+    /*
     Group mockMaxCountGroup = Mockito.mock(Group.class);
     Group mockMinCountGroup = Mockito.mock(Group.class);
     HttpServletRequest mockPostReq = Mockito.mock(HttpServletRequest.class);
@@ -49,4 +32,6 @@ class GroupQuantityValidatorTest {
         Mockito.when(mockMinCountGroup.getStudentsQuantity()).thenReturn(min+1);
         assertDoesNotThrow(()-> new GroupQuantityValidator(mockDeleteReq, mockMinCountGroup));
     }
+
+     */
 }

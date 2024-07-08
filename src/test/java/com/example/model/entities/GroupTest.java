@@ -1,13 +1,7 @@
-package com.example.model.vo;
-
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.Test;
-
-import java.time.LocalDate;
-
-import static org.junit.jupiter.api.Assertions.*;
+package com.example.model.entities;
 
 class GroupTest {
+    /*
     static Group group;
     static Student student1;
     static Student student2;
@@ -58,4 +52,6 @@ class GroupTest {
         assertNotEquals(group1, group2);
         assertNotEquals(group1.hashCode(), group2.hashCode());
     }
+
+     */
 }

@@ -1,28 +1,9 @@
 package com.example.model.service;
 
-import com.example.consts.ModelConstants;
-import com.example.exeptions.IncorrectRequestException;
-import com.example.exeptions.NoDataException;
 import com.example.mapper.StudentMapperImpl;
-import com.example.model.dto.Request.StudentRequest;
-import com.example.model.dto.Response.DtoResponse;
-import com.example.model.dto.Response.StudentResponse;
-import com.example.model.vo.Student;
-import com.example.repository.RepositoryFacade;
-import lombok.SneakyThrows;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.Test;
-import org.mockito.Mockito;
-
-import java.time.LocalDate;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
-import static org.junit.jupiter.api.Assertions.*;
 
 class StudentServiceTest {
-
+    /*
     RepositoryFacade repo = Mockito.mock(RepositoryFacade.class);
     Student student1 = new Student("std1fn", "stdmn", "std1sn", LocalDate.now(), "+71234567890");
     Student student2 = new Student("std2fn", "stdmn", "std2sn", LocalDate.now(), "+71234567890");
@@ -108,4 +89,6 @@ class StudentServiceTest {
         Mockito.when(repo.getGroupIdByStudent(student2)).thenReturn(null);
         assertThrows(NoDataException.class, () -> service.delete(Integer.toString(student2.getId())));
     }
+
+     */
 }

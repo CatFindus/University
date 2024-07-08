@@ -1,6 +1,5 @@
 package com.example.model.dto.Request;
 
-import com.example.consts.LoggerConstants;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
@@ -23,6 +22,6 @@ public class ScheduleUnitRequest implements DtoRequest {
     private Integer studentId;
     private Integer groupId;
     private Integer teacherId;
-    private String subject;
+    private String requestNameSubject;
 
 }

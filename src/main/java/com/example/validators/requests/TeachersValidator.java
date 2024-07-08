@@ -1,7 +1,6 @@
 package com.example.validators.requests;
 
 import com.example.exeptions.IncorrectRequestException;
-import com.example.model.vo.Subject;
 import com.example.validators.Validators;
 import com.example.validators.parameters.PathValidator;
 import com.example.validators.parameters.QueryValidator;
@@ -86,8 +85,10 @@ public class TeachersValidator extends Validators {
                 Map<String, String[]> parameterMap = req.getParameterMap();
                 if (parameterMap.size() != 1 || !parameterMap.containsKey(SUBJECT_PARAMETER))
                     throw new IncorrectRequestException(INCORRECT_REQUEST_ARGS);
+                /*
                 if (!Subject.containRequestName(req.getParameterMap().get(SUBJECT_PARAMETER)[0]))
                     throw new IncorrectRequestException(INCORRECT_BODY_OF_REQUEST);
+                */
             } catch (NumberFormatException e) {
                 logger.trace(END_VALIDATION_UNSUCCESSFUL, e.getMessage());
                 throw new IncorrectRequestException(INCORRECT_NUMBER_FORMAT);

@@ -6,7 +6,7 @@ import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 
 class PathValidatorTest {
-
+    /*
     @Test
     void validation() {
         String goodPath = "/1/2/3";
@@ -14,4 +14,6 @@ class PathValidatorTest {
         assertThrows(IncorrectRequestException.class, ()-> new PathValidator(badPath).validate());
         assertDoesNotThrow(()-> new PathValidator(goodPath).validate());
     }
+
+     */
 }

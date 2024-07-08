@@ -3,19 +3,13 @@ package com.example.controller.servlets;
 import com.example.controller.ServiceFactory;
 import com.example.exeptions.IncorrectRequestException;
 import com.example.exeptions.NoDataException;
-import com.example.mapper.StudentMapper;
-import com.example.mapper.StudentMapperImpl;
 import com.example.mapper.viewmapper.JsonMapper;
 import com.example.mapper.viewmapper.ViewMapper;
 import com.example.model.dto.Request.StudentRequest;
 import com.example.model.dto.Response.DtoResponse;
 import com.example.model.dto.Response.ErrorResponse;
-import com.example.model.dto.Response.StudentResponse;
 import com.example.model.service.Service;
 import com.example.model.service.StudentService;
-import com.example.model.vo.ModelUnit;
-import com.example.model.vo.Student;
-import com.example.repository.RepositoryFacade;
 import com.example.validators.parameters.NameValidator;
 import com.example.validators.parameters.PhoneValidator;
 import com.example.validators.requests.StudentsValidator;
@@ -39,15 +33,13 @@ import static com.example.consts.ModelConstants.*;
 @WebServlet(name = "StudentsServlet", urlPatterns = "/students/*")
 public class StudentsServlet extends HttpServlet {
     private static final Logger logger = LoggerFactory.getLogger(StudentsServlet.class);
-    private transient View view;
-    private transient Service service;
-    private transient ViewMapper jsonMapper;
-    private transient StudentMapper mapper;
+    private View view;
+    private Service service;
+    private ViewMapper jsonMapper;
 
     private void initialization(HttpServletResponse resp) {
         view = new JsonView(resp);
         jsonMapper = new JsonMapper();
-        mapper = new StudentMapperImpl();
         service = ServiceFactory.getService(StudentService.class);
     }
 
@@ -57,13 +49,13 @@ public class StudentsServlet extends HttpServlet {
         initialization(resp);
         try {
             new StudentsValidator(req).validate();
-            List<ModelUnit> students;
+            List<DtoResponse> responses = new ArrayList<>();
             if (req.getPathInfo() != null)
-                students = service.getDataById(req.getPathInfo().replaceFirst(PATH_SEPARATOR, EMPTY));
-            else students = service.getDataByParameters(req.getParameterMap());
-            view.update(service.mappingVoToDto(students));
+                responses.add(service.getDataById(req.getPathInfo().replaceFirst(PATH_SEPARATOR, EMPTY)));
+            else responses = service.getDataByParameters(req.getParameterMap());
+            view.update(responses);
             logger.trace(DO_GET_END);
-        } catch (IncorrectRequestException e) {
+        } catch (IncorrectRequestException | NoDataException e) {
             ErrorResponse response = new ErrorResponse(e.getMessage());
             logger.warn(WARN_MSG, response.getErrorID(), e.getMessage());
             view.update(List.of(response));
@@ -84,14 +76,12 @@ public class StudentsServlet extends HttpServlet {
             } catch (IOException e) {
                 throw new IncorrectRequestException(INCORRECT_BODY_OF_REQUEST);
             }
-            Student student = mapper.mapFromRequest(sr);
-            StudentResponse studentResponse = mapper.mapToResponse(student, null);
-            if (service.create(student)) {
-                resp.setStatus(201);
-                view.update(List.of(studentResponse));
-            }
+            DtoResponse response = service.create(req.getPathInfo(), sr);
+            resp.setStatus(201);
+            view.update(List.of(response));
+
             logger.trace(DO_POST_END);
-        } catch (IncorrectRequestException e) {
+        } catch (IncorrectRequestException | NoDataException e) {
             ErrorResponse response = new ErrorResponse(e.getMessage());
             logger.warn(WARN_MSG, response.getErrorID(), e.getMessage());
             view.update(List.of(response));
@@ -107,8 +97,8 @@ public class StudentsServlet extends HttpServlet {
             new StudentsValidator(req).validate();
             String studentId = req.getPathInfo().replaceFirst(PATH_SEPARATOR, EMPTY);
             StudentRequest studentRequest = jsonMapper.getDtoFromRequest(StudentRequest.class, req.getReader());
-            List<DtoResponse> response = service.update(studentId, studentRequest);
-            view.update(response);
+            DtoResponse response = service.update(studentId, studentRequest);
+            view.update(List.of(response));
             logger.trace(DO_PUT_END);
         } catch (IncorrectRequestException | NoDataException e) {
             ErrorResponse response = new ErrorResponse(e.getMessage());
@@ -125,7 +115,7 @@ public class StudentsServlet extends HttpServlet {
 
             new StudentsValidator(req).validate();
             String studentId = req.getPathInfo().replaceFirst(PATH_SEPARATOR, EMPTY);
-            service.delete(studentId);
+            service.delete(studentId, null);
             resp.setStatus(204);
             view.update(new ArrayList<>());
             logger.trace(DO_DELETE_END);
@@ -135,6 +125,4 @@ public class StudentsServlet extends HttpServlet {
             view.update(List.of(response));
         }
     }
-
-
 }

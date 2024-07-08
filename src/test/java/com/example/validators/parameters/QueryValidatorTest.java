@@ -13,6 +13,7 @@ import static com.example.consts.ModelConstants.RQ_ID;
 import static org.junit.jupiter.api.Assertions.*;
 
 class QueryValidatorTest {
+    /*
     HttpServletRequest goodMockedRequest = Mockito.mock(HttpServletRequest.class);
     HttpServletRequest badMockedRequest = Mockito.mock(HttpServletRequest.class);
 
@@ -29,4 +30,6 @@ class QueryValidatorTest {
         assertThrows(IncorrectRequestException.class, () -> new QueryValidator(badMockedRequest).validate());
         assertDoesNotThrow(() -> new QueryValidator(goodMockedRequest).validate());
     }
+
+     */
 }

@@ -1,35 +1,44 @@
-package com.example.model.vo;
+package com.example.model.entities;
 
-import lombok.AccessLevel;
-import lombok.Builder;
-import lombok.Data;
-import lombok.Getter;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import jakarta.persistence.*;
+import lombok.*;
 
 import java.time.LocalDateTime;
 
-import static com.example.consts.LoggerConstants.POJO_CREATED;
-
 @Data
+@AllArgsConstructor
+@NoArgsConstructor
 @Builder
+@Entity
+@Table(name = "schedule_units", schema = "university_sc")
 public class ScheduleUnit implements Comparable<ScheduleUnit>, ModelUnit {
-    @Getter(AccessLevel.NONE)
-    private final static Logger logger = LoggerFactory.getLogger(ScheduleUnit.class);
+    @Id
+    @SequenceGenerator(
+            name = "schedule_seq",
+            sequenceName = "schedule_sequence",
+            schema = "university_sc",
+            allocationSize = 1
+    )
+    @GeneratedValue(
+            strategy = GenerationType.SEQUENCE,
+            generator = "schedule_seq"
+    )
+    private Long id;
+    @Column(name = "begin_ts", nullable = false)
     private LocalDateTime begin;
+    @Column(name = "end_ts", nullable = false)
     private LocalDateTime end;
+    @ManyToOne
+    @JoinColumn(name = "teacher_id")
     private Teacher teacher;
+    @ManyToOne
+    @JoinColumn(name = "group_id")
     private Group group;
+    @ManyToOne
+    @JoinColumn(name = "subject_id")
     private Subject subject;
 
-    public ScheduleUnit(LocalDateTime begin, LocalDateTime end, Teacher teacher, Group group, Subject subject) {
-        this.begin = begin;
-        this.end = end;
-        this.teacher = teacher;
-        this.group = group;
-        this.subject = subject;
-        logger.debug(POJO_CREATED, this);
-    }
+
 
     @SuppressWarnings("unused")
     public boolean isIntersect(ScheduleUnit otherUnit) {
@@ -39,8 +48,7 @@ public class ScheduleUnit implements Comparable<ScheduleUnit>, ModelUnit {
         boolean timeIntersect = (isBeginMatches || isEndMatches);
         boolean teacherIntersect = this.teacher.getId().equals(otherUnit.teacher.getId());
         boolean groupIntersect = this.group.getId().equals(otherUnit.group.getId());
-        boolean intersect = timeIntersect && (groupIntersect || teacherIntersect);
-        return intersect;
+        return timeIntersect && (groupIntersect || teacherIntersect);
     }
 
     @Override
