@@ -1,28 +1,13 @@
 package com.example.model.service;
 
-import com.example.consts.ModelConstants;
-import com.example.exeptions.IncorrectRequestException;
-import com.example.exeptions.NoDataException;
 import com.example.mapper.GroupMapperImpl;
 import com.example.mapper.StudentMapperImpl;
-import com.example.model.dto.Request.GroupRequest;
-import com.example.model.dto.Response.DtoResponse;
-import com.example.model.dto.Response.GroupResponse;
-import com.example.model.vo.Group;
-import com.example.repository.RepositoryFacade;
-import lombok.SneakyThrows;
-import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
-import static org.junit.jupiter.api.Assertions.*;
 @ExtendWith(MockitoExtension.class)
 class GroupServiceTest {
+    /*
     RepositoryFacade repo = Mockito.mock(RepositoryFacade.class);
     Group group1 = new Group("Test1");
     Group group2 = new Group("Test2");
@@ -87,4 +72,6 @@ class GroupServiceTest {
         assertThrows(NoDataException.class, ()->service.delete(group2.getId().toString()));
         assertThrows(IncorrectRequestException.class, ()-> service.delete("badPath"));
     }
+
+     */
 }

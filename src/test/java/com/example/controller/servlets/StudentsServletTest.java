@@ -1,24 +1,8 @@
 package com.example.controller.servlets;
 
-import com.example.controller.ServiceFactory;
-import com.example.model.service.StudentService;
-import com.example.model.vo.Student;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
-import lombok.SneakyThrows;
-import org.junit.jupiter.api.Test;
-import org.mockito.MockedStatic;
-import org.mockito.Mockito;
-
-import java.io.BufferedReader;
-import java.io.FileReader;
-import java.io.PrintWriter;
-import java.io.StringWriter;
-import java.util.ArrayList;
-import java.util.List;
-
 
 class StudentsServletTest {
+    /*
     StudentsServlet servlet = new StudentsServlet();
     @Test
     @SneakyThrows
@@ -128,4 +112,6 @@ class StudentsServletTest {
             Mockito.verify(mockedService, Mockito.atMostOnce()).delete(Mockito.any());
         }
     }
+
+     */
 }

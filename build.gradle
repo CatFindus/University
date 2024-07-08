@@ -3,6 +3,7 @@ plugins {
     id 'application'
     id 'war'
     id 'jacoco'
+    id "org.hibernate.orm" version "6.4.4.Final"
 }
 
 group = 'myorg.example'
@@ -31,6 +32,8 @@ dependencies {
     implementation group: 'org.projectlombok', name: 'lombok-mapstruct-binding', version: '0.2.0'
     implementation group: 'org.jacoco', name: 'org.jacoco.core', version: '0.8.11'
     implementation group: 'jakarta.servlet', name: 'jakarta.servlet-api', version: '6.0.0'
+    implementation group: 'org.postgresql', name: 'postgresql', version: '42.7.3'
+
 
     compileOnly 'org.projectlombok:lombok:1.18.30'
 

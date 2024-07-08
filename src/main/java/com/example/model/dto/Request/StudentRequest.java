@@ -12,7 +12,6 @@ import java.time.LocalDate;
 
 @Data
 public class StudentRequest implements DtoRequest {
-    @JsonIgnore
     private String firstName;
     private String middleName;
     private String surName;

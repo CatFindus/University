@@ -1,25 +1,25 @@
 package com.example.model.service;
 
-import com.example.consts.ModelConstants;
+import com.example.consts.ControlerConstants;
 import com.example.exeptions.IncorrectRequestException;
 import com.example.exeptions.NoDataException;
-import com.example.mapper.GroupMapper;
+import com.example.mapper.EntityMapper;
 import com.example.model.dto.Request.DtoRequest;
 import com.example.model.dto.Request.GroupRequest;
 import com.example.model.dto.Response.DtoResponse;
-import com.example.model.vo.Group;
-import com.example.model.vo.ModelUnit;
-import com.example.model.vo.Student;
+import com.example.model.dto.Response.NoDataResponse;
+import com.example.model.entities.Group;
+import com.example.model.entities.ModelUnit;
+import com.example.model.entities.Student;
 import com.example.repository.RepositoryFacade;
+import com.example.validators.quantity.GroupQuantityValidator;
 import lombok.AllArgsConstructor;
+import org.hibernate.Session;
+import org.hibernate.Transaction;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.function.Predicate;
-import java.util.stream.Stream;
+import java.util.*;
 
 import static com.example.consts.LoggerConstants.*;
 import static com.example.consts.ModelConstants.*;
@@ -28,11 +28,12 @@ import static com.example.consts.ModelConstants.*;
 public class GroupService implements Service {
     private final static Logger logger = LoggerFactory.getLogger(GroupService.class);
     private final RepositoryFacade repo;
-    private final GroupMapper mapper;
+    private final EntityMapper mapper;
+    private final Session session;
     private final Service studentService;
 
     @Override
-    public List<ModelUnit> getDataById(String idString) throws IncorrectRequestException {
+    public DtoResponse getDataById(String idString) throws IncorrectRequestException, NoDataException {
         logger.trace(SERVICE_GETDATABYID_BEGIN, idString);
         int id;
         try {
@@ -40,42 +41,40 @@ public class GroupService implements Service {
         } catch (NumberFormatException e) {
             throw new IncorrectRequestException(INCORRECT_NUMBER_FORMAT);
         }
-        Group result = repo.getGroup(id);
-        logger.trace(SERVICE_GETDATABYID_END, result != null ? result.getId() : null);
-        if (result != null) return List.of(result);
-        else return new ArrayList<>();
+        Optional<Group> mayBeGroup = repo.getGroup(id);
+        logger.trace(SERVICE_GETDATABYID_END, mayBeGroup.map(Group::getId).orElse(null));
+        if (mayBeGroup.isEmpty()) throw new NoDataException(DATA_NOT_FOUND);
+        DtoResponse response = mappingVoToDto(mayBeGroup.get());
+        return response;
     }
 
     @Override
-    public List<ModelUnit> getDataByParameters(Map<String, String[]> parameterMap) throws IncorrectRequestException {
+    public List<DtoResponse> getDataByParameters(Map<String, String[]> parameterMap) throws IncorrectRequestException {
         logger.trace(SERVICE_GETDATABYPARAMS_BEGIN, parameterMap.keySet());
-        List<Predicate<Group>> predicates = new ArrayList<>();
-        List<Group> groups = null;
-        for (String key : parameterMap.keySet()) {
-            String value = parameterMap.get(key)[0];
-            switch (key) {
-                case RQ_NUMBER -> predicates.add(gr -> gr.getNumber().equalsIgnoreCase(value));
-                case RQ_ID -> {
-                    try {
-                        Group group = repo.getGroup(Integer.parseInt(value));
-                        groups = group != null ? List.of(group) : new ArrayList<>();
-                    } catch (NumberFormatException e) {
-                        throw new IncorrectRequestException(INCORRECT_NUMBER_FORMAT);
-                    }
+        int limit = 100;
+        int offset = 0;
+        Map<String, Object> requestMap = new HashMap<>();
+        List<Group> groups;
+        Transaction transaction = session.beginTransaction();
+        try {
+            for (String key : parameterMap.keySet()) {
+                String value = parameterMap.get(key)[0];
+                switch (key) {
+                    case RQ_NUMBER -> requestMap.put(RQ_NUMBER, value);
+                    case RQ_ID -> requestMap.put(RQ_ID, Integer.parseInt(value));
+                    case RQ_LIMIT -> limit = Integer.parseInt(value);
+                    case RQ_OFFSET -> offset = Integer.parseInt(value);
+                    default -> throw new IncorrectRequestException(String.format(PARAM_NOT_RECOGNISED, key));
                 }
-                default -> throw new IncorrectRequestException(String.format(PARAM_NOT_RECOGNISED, key));
             }
+        } catch (NumberFormatException e) {
+            throw new IncorrectRequestException(INCORRECT_NUMBER_FORMAT);
         }
-        if (groups == null) groups = repo.getGroups(predicates);
-        else groups = filterGroupListByPredicates(groups, predicates);
+        groups = repo.getGroups(requestMap, limit, offset);
+        List<DtoResponse> responses = mappingVoToDto(new ArrayList<>(groups));
+        transaction.commit();
         logger.trace(SERVICE_GETDATABYPARAMS_END, groups.stream().map(Group::getId).toList());
-        return new ArrayList<>(groups);
-    }
-
-    private List<Group> filterGroupListByPredicates(List<Group> groups, List<Predicate<Group>> predicates) {
-        Stream<Group> stream = groups.stream();
-        for (Predicate<Group> predicate : predicates) stream = stream.filter(predicate);
-        return stream.toList();
+        return responses;
     }
 
     @Override
@@ -84,93 +83,119 @@ public class GroupService implements Service {
         List<DtoResponse> list = new ArrayList<>();
         for (ModelUnit unit : modelUnitList) {
             Group group = (Group) unit;
-            List<DtoResponse> studentResponses = new ArrayList<>(studentService.mappingVoToDto(new ArrayList<>(group.getStudents())));
-            list.add(mapper.mapToResponse(group, studentResponses));
+            list.add(mapper.mapGroupToResponse(group));
         }
         logger.trace(SERVICE_MAP_DTO_END, list.size());
         return list;
     }
 
     @Override
-    public boolean create(ModelUnit modelUnit) {
-        logger.trace(SERVICE_CREATE, ((Group) modelUnit).getId());
-        return repo.addGroup((Group) modelUnit);
+    public DtoResponse mappingVoToDto(ModelUnit modelUnit) {
+        Group group = (Group) modelUnit;
+        return mapper.mapGroupToResponse(group);
     }
 
     @Override
-    public List<DtoResponse> update(String path, DtoRequest dtoRequest) throws IncorrectRequestException, NoDataException {
-        logger.trace(SERVICE_UPDATE_BEGIN, path, dtoRequest);
-        if (path.isEmpty()) throw new IncorrectRequestException();
-        if (path.contains(PATH_SEPARATOR)) {
-            String[] strings = path.split(PATH_SEPARATOR);
-            if (strings.length == 1) return updateGroup(strings[0], dtoRequest);
-            else {
-                try {
-                    Integer groupId = Integer.parseInt(strings[0]);
-                    for (int i = 1; i < strings.length; i++) {
-                        int studentId = Integer.parseInt(strings[i]);
-                        Student student = repo.getStudent(studentId);
-                        repo.addStudentToGroup(student, groupId);
-                    }
-                    Group group = repo.getGroup(groupId);
-                    if (group == null) throw new NoDataException(DATA_NOT_FOUND);
-                    List<ModelUnit> students = new ArrayList<>(group.getStudents());
-                    List<DtoResponse> studentResponses = studentService.mappingVoToDto(students);
-                    return List.of(mapper.mapToResponse(group, studentResponses));
-                } catch (NumberFormatException e) {
-                    throw new IncorrectRequestException(INCORRECT_NUMBER_FORMAT);
-                }
-            }
+    public DtoResponse create(String path, DtoRequest dtoRequest) throws IncorrectRequestException {
+        logger.trace(SERVICE_CREATE, dtoRequest);
+        Transaction transaction = session.beginTransaction();
+        if (path==null) {
+            Group group = mapper.mapGroupFromRequest((GroupRequest) dtoRequest);
+            repo.addGroup(group);
+            DtoResponse response = mappingVoToDto(group);
+            transaction.commit();
+            return response;
         } else {
-            return updateGroup(path, dtoRequest);
+            try {
+                return addStudentToGroup(path, (GroupRequest) dtoRequest, transaction);
+            } catch (NumberFormatException e) { throw new IncorrectRequestException(INCORRECT_NUMBER_FORMAT); } catch (
+                    NoDataException e) {
+                throw new RuntimeException(e);
+            }
         }
     }
 
-    private List<DtoResponse> updateGroup(String id, DtoRequest dtoRequest) throws IncorrectRequestException {
-        try {
-            int intId = Integer.parseInt(id);
-            Group group = repo.getGroup(intId);
-            if (group==null) throw new IncorrectRequestException(DATA_NOT_FOUND);
-            GroupRequest groupRequest = (GroupRequest) dtoRequest;
-            if (groupRequest.getNumber() != null) group.setNumber(groupRequest.getNumber());
-            List<ModelUnit> students = new ArrayList<>(group.getStudents());
-            List<DtoResponse> studentResponses = new ArrayList<>(studentService.mappingVoToDto(students));
-            logger.trace(SERVICE_UPDATE_END);
-            return List.of(mapper.mapToResponse(group, studentResponses));
-        } catch (NumberFormatException e) {
-            throw new IncorrectRequestException(INCORRECT_NUMBER_FORMAT);
+    private DtoResponse addStudentToGroup(String path, GroupRequest dtoRequest, Transaction transaction) throws IncorrectRequestException, NoDataException {
+        int id = Integer.parseInt(path);
+        new GroupQuantityValidator(ControlerConstants.POST, id).validate();
+        if (dtoRequest.getStudentId()==null) throw new IncorrectRequestException(INCORRECT_BODY_OF_REQUEST);
+        Optional<Student> mayBeStudent = repo.getStudent(Integer.parseInt(dtoRequest.getStudentId()));
+        if (mayBeStudent.isEmpty()) throw new NoDataException(DATA_NOT_FOUND);
+        Student student = mayBeStudent.get();
+        boolean studentAdded = repo.addStudentToGroup(student,id);
+        if(!studentAdded) {
+            transaction.rollback();
+            throw new IncorrectRequestException(DATA_NOT_UPDATED);
+        } else {
+            DtoResponse response = mappingVoToDto(repo.getGroup(id).get());
+            transaction.commit();
+            return response;
         }
     }
 
     @Override
-    public void delete(String path) throws IncorrectRequestException, NoDataException {
+    public DtoResponse update(String path, DtoRequest dtoRequest) throws IncorrectRequestException, NoDataException {
+        logger.trace(SERVICE_UPDATE_BEGIN, path, dtoRequest);
+        Transaction transaction = session.beginTransaction();
+        if (path.isEmpty()) throw new IncorrectRequestException();
+        try {
+            int id = Integer.parseInt(path);
+            GroupRequest request = (GroupRequest) dtoRequest;
+            Optional<Group> mayBeGroup = repo.getGroup(id);
+            if (mayBeGroup.isEmpty()) throw  new NoDataException(DATA_NOT_FOUND);
+            Group group = mayBeGroup.get();
+            if (request.getNumber()!=null) group.setNumber(request.getNumber());
+            group = repo.update(group);
+            DtoResponse response = mappingVoToDto(group);
+            transaction.commit();
+            return response;
+        } catch (NumberFormatException e) {
+            transaction.rollback();
+            throw new IncorrectRequestException(INCORRECT_NUMBER_FORMAT); }
+    }
+
+    @Override
+    public DtoResponse delete(String path, DtoRequest dtoRequest) throws IncorrectRequestException, NoDataException {
         logger.trace(SERVICE_DELETE_BEGIN, path);
         if (path.isEmpty()) throw new IncorrectRequestException(INCORRECT_PATH_FORMAT);
-        if (path.contains(PATH_SEPARATOR)) {
-            String[] strings = path.split(PATH_SEPARATOR);
-            if (strings.length == 1) deleteGroup(strings[0]);
+        int id;
+        try {
+            id = Integer.parseInt(path);
+        } catch (NumberFormatException e) { throw new IncorrectRequestException(INCORRECT_NUMBER_FORMAT); }
+        Transaction transaction = session.beginTransaction();
+        if(dtoRequest==null) {
+            boolean deleted = repo.removeGroup(id);
+            if(!deleted) {
+                transaction.rollback();
+                throw new NoDataException(DATA_NOT_UPDATED);
+            }
+            return new NoDataResponse();
+        } else {
+            GroupRequest request = (GroupRequest) dtoRequest;
+            if (request.getStudentId()==null) {
+                transaction.rollback();
+                throw new IncorrectRequestException(INCORRECT_BODY_OF_REQUEST);
+            }
+            new GroupQuantityValidator(ControlerConstants.DELETE, repo.getStudentsCountByGroup(id)).validate();
             try {
-                for (int i = 1; i < strings.length; i++) {
-                    int studentId = Integer.parseInt(strings[i]);
-                    Integer groupId = Integer.parseInt(strings[0]);
-                    repo.removeStudentFromGroup(repo.getStudent(studentId), groupId);
+                Optional<Student> mayBeStudent = repo.getStudent(Integer.parseInt(request.getStudentId()));
+                if (mayBeStudent.isEmpty()) {
+                    transaction.rollback();
+                    throw new NoDataException(DATA_NOT_FOUND);
+                }
+                Student student = mayBeStudent.get();
+                boolean replaced = repo.removeStudentFromGroup(student, id);
+                if(replaced) {
+                    DtoResponse response = mappingVoToDto(repo.getGroup(id).get());
+                    transaction.commit();
+                    return response;
+                } else {
+                    throw new IncorrectRequestException(DATA_NOT_UPDATED);
                 }
             } catch (NumberFormatException e) {
+                transaction.rollback();
                 throw new IncorrectRequestException(INCORRECT_NUMBER_FORMAT);
             }
-        } else {
-            deleteGroup(path);
-        }
-    }
-
-    private void deleteGroup(String id) throws IncorrectRequestException, NoDataException {
-        try {
-            Integer intId = Integer.parseInt(id);
-            boolean removedSuccessful = repo.removeGroup(intId);
-            if (!removedSuccessful) throw new NoDataException(DELETE_NOT_SUCCESSFULLY);
-            logger.trace(SERVICE_DELETE_END, true);
-        } catch (NumberFormatException e) {
-            throw new IncorrectRequestException(INCORRECT_NUMBER_FORMAT);
         }
     }
 }

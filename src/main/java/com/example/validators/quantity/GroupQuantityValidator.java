@@ -1,11 +1,8 @@
 package com.example.validators.quantity;
 
 import com.example.exeptions.IncorrectRequestException;
-import com.example.model.vo.Group;
-import com.example.model.vo.Student;
+import com.example.model.entities.Student;
 import com.example.validators.Validators;
-import com.example.validators.requests.StudentsValidator;
-import jakarta.servlet.http.HttpServletRequest;
 import lombok.AllArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -22,8 +19,8 @@ import static com.example.consts.ModelConstants.*;
 @AllArgsConstructor
 public class GroupQuantityValidator extends Validators {
     private static final Logger logger = LoggerFactory.getLogger(GroupQuantityValidator.class);
-    private HttpServletRequest req;
-    private Group group;
+    private String reqMethod;
+    private int group_count;
 
     @Override
     protected void validation() throws IncorrectRequestException {
@@ -37,8 +34,7 @@ public class GroupQuantityValidator extends Validators {
         }
         max = Integer.parseInt(properties.getProperty(MAX_STUDENT_IN_GROUP));
         min = Integer.parseInt(properties.getProperty(MIN_STUDENT_IN_GROUP));
-        String method = req.getMethod();
-        switch (method) {
+        switch (reqMethod) {
             case POST -> doMaxQuantityValidation(max);
             case DELETE -> doMinQuantityValidation(min);
             default -> throw new IncorrectRequestException(UNKNOWN_ERROR);
@@ -47,17 +43,21 @@ public class GroupQuantityValidator extends Validators {
     }
 
     private void doMinQuantityValidation(int min) throws IncorrectRequestException {
-        if (group.getStudentsQuantity() <= min) {
+
+        if (group_count <= min) {
             logger.error(ERROR_MIN_STUDENT_IN_GROUP);
             throw new IncorrectRequestException(ERROR_MIN_STUDENT_IN_GROUP);
         }
+
     }
 
     private void doMaxQuantityValidation(int max) throws IncorrectRequestException {
-        if (group.getStudentsQuantity() >= max) {
+
+        if (group_count >= max) {
             logger.error(MAX_STUDENT_IN_GROUP);
             throw new IncorrectRequestException(ERROR_MAX_STUDENT_IN_GROUP);
         }
+
     }
 
 }

@@ -37,8 +37,8 @@ public class QueryValidator extends Validators {
                 switch (key) {
                     case RQ_BEGIN_DATE_TIME -> begin = LocalDateTime.parse(value, formatter);
                     case RQ_END_DATE_TIME -> end = LocalDateTime.parse(value, formatter);
-                    case RQ_SUBJECT -> subjectValidation(parameterMap);
-                    case RQ_STUDENT_ID, RQ_GROUP_ID, RQ_TEACHER_ID, RQ_EXPERIENCE, RQ_ID ->
+                    case RQ_SUBJECT, RQ_NAME, RQ_REQUEST_NAME -> subjectValidation(key, value);
+                    case RQ_STUDENT_ID, RQ_GROUP_ID, RQ_TEACHER_ID, RQ_EXPERIENCE, RQ_ID, RQ_LIMIT, RQ_OFFSET ->
                             idValidation(parameterMap.get(key));
                     case RQ_BIRTHDAY -> birthdayValidation(value);
                     case RQ_FIRST_NAME, RQ_MIDDLE_NAME, RQ_SURNAME -> {
@@ -74,7 +74,7 @@ public class QueryValidator extends Validators {
     private void idValidation(String[] parameters) throws IncorrectRequestException {
         if (parameters.length != 1) throw new IncorrectRequestException(INCORRECT_REQUEST_ARGS);
         try {
-            Integer.parseInt(parameters[0]);
+            Long.parseLong(parameters[0]);
         } catch (NumberFormatException e) {
             logger.trace(END_VALIDATION_UNSUCCESSFUL, e.getMessage());
             throw new IncorrectRequestException(INCORRECT_NUMBER_FORMAT);
@@ -82,7 +82,7 @@ public class QueryValidator extends Validators {
 
     }
 
-    private void subjectValidation(Map<String, String[]> parameterMap) throws IncorrectRequestException {
-        for (String value : parameterMap.get(RQ_SUBJECT)) new SubjectValidator(value).validate();
+    private void subjectValidation(String key, String value) throws IncorrectRequestException {
+        new SubjectValidator(key, value).validate();
     }
 }

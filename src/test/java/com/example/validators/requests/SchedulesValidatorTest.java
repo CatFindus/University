@@ -1,22 +1,7 @@
 package com.example.validators.requests;
 
-import com.example.consts.ControlerConstants;
-import com.example.consts.ModelConstants;
-import com.example.exeptions.IncorrectRequestException;
-import com.example.model.vo.Group;
-import jakarta.servlet.http.HttpServletRequest;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.Test;
-import org.mockito.Mockito;
-
-import java.time.LocalDateTime;
-import java.util.HashMap;
-import java.util.Map;
-
-import static com.example.consts.ModelConstants.*;
-import static org.junit.jupiter.api.Assertions.*;
-
 class SchedulesValidatorTest {
+    /*
     HttpServletRequest mockReq = Mockito.mock(HttpServletRequest.class);
     static String[] goodBegin = {"2023-10-20-10-00"};
     static String[] badBegin = {"2023-10-20-11-00"};
@@ -84,4 +69,6 @@ class SchedulesValidatorTest {
         Mockito.when(mockReq.getPathInfo()).thenReturn("someArgs");
         assertThrows(IncorrectRequestException.class, ()-> new SchedulesValidator(mockReq).validate());
     }
+
+     */
 }

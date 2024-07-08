@@ -1,7 +1,6 @@
 package com.example.validators.requests;
 
 import com.example.exeptions.IncorrectRequestException;
-import com.example.model.vo.Subject;
 import com.example.validators.Validators;
 import com.example.validators.parameters.PathValidator;
 import com.example.validators.parameters.QueryValidator;
@@ -61,9 +60,9 @@ public class GroupsValidator extends Validators {
                 if (paths.length != 1) throw new IncorrectRequestException();
                 Integer.parseInt(paths[0]);
                 Map<String, String[]> parameterMap = req.getParameterMap();
-                if (parameterMap.size() != 1 && !parameterMap.containsKey(RQ_ID))
+                if (parameterMap.size() != 1 || !parameterMap.containsKey(RQ_STUDENT_ID))
                     throw new IncorrectRequestException(INCORRECT_REQUEST_ARGS);
-                for (String value : parameterMap.get(RQ_ID)) Integer.parseInt(value);
+                for (String value : parameterMap.get(RQ_STUDENT_ID)) Integer.parseInt(value);
             } else {
                 if (paths.length <= 1) throw new IncorrectRequestException(INCORRECT_REQUEST_ARGS);
                 for (String path : paths) Integer.parseInt(path);
@@ -92,9 +91,9 @@ public class GroupsValidator extends Validators {
             try {
                 Integer.parseInt(req.getPathInfo().replaceFirst(PATH_SEPARATOR, EMPTY));
                 Map<String, String[]> parameterMap = req.getParameterMap();
-                if (parameterMap.size() != 1 || !parameterMap.containsKey(RQ_ID))
+                if (parameterMap.size() != 1 || !parameterMap.containsKey(RQ_STUDENT_ID))
                     throw new IncorrectRequestException(INCORRECT_REQUEST_ARGS);
-                for (String id:parameterMap.get(RQ_ID)) Integer.parseInt(id);
+                for (String id:parameterMap.get(RQ_STUDENT_ID)) Integer.parseInt(id);
             } catch (NumberFormatException e) {
                 logger.trace(END_VALIDATION_UNSUCCESSFUL, e.getMessage());
                 throw new IncorrectRequestException(INCORRECT_NUMBER_FORMAT);
