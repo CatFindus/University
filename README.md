@@ -13,6 +13,7 @@
   Процент покрытия тестами согласно Jacoco или 67%.
   Dockerfile и docker-compose.yaml приложены к проекту.
   Выполнено размещение проекта на dockerHub: https://hub.docker.com/repository/docker/catfindus/university/general
+  <br>
   CI выполено с использованием Jacoco.
   <br>
   <h2>Запуск приложения:</h2>
